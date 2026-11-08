@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# One entry point for the common Optimizr development and install tasks.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+usage() {
+  cat <<'EOF'
+Optimizr helper
+
+Usage: scripts/optimizr <command> [options]
+
+Commands:
+  install      Build, copy to /Applications, and launch
+  run          Build and launch the local dist app
+  build        Build dist/Optimizr.app
+  test         Run the Swift test suite
+  scan         Run the headless scanner (pass --json or --markdown)
+  docs         Start the Docusaurus development server
+  site         Build and preview docs + marketing together
+  icon         Regenerate the app icon
+  clean        Remove build artifacts (--all includes node_modules)
+  uninstall    Remove /Applications/Optimizr.app
+
+Examples:
+  ./scripts/optimizr install
+  ./scripts/optimizr install --no-launch
+  ./scripts/optimizr run
+  ./scripts/optimizr scan --markdown
+  ./scripts/optimizr docs
+  ./scripts/optimizr site
+EOF
+}
+
+command="${1:-help}"
+if [[ $# -gt 0 ]]; then
+  shift
+fi
+
+case "$command" in
+  install)
+    exec "$ROOT/scripts/install-app.sh" "$@"
+    ;;
+  run)
+    exec "$ROOT/scripts/run-app.sh" "$@"
+    ;;
+  build)
+    exec "$ROOT/scripts/build-app.sh" "$@"
+    ;;
+  test)
+    exec "$ROOT/scripts/test.sh" "$@"
+    ;;
+  scan)
+    exec "$ROOT/scripts/scan.sh" "$@"
+    ;;
+  docs)
+    exec "$ROOT/scripts/serve-docs.sh" "$@"
+    ;;
+  site)
+    exec "$ROOT/scripts/preview-sites.sh" "$@"
+    ;;
+  icon)
+    exec python3 "$ROOT/scripts/make-icon.py" "$@"
+    ;;
+  clean)
+    exec "$ROOT/scripts/clean.sh" "$@"
+    ;;
+  uninstall)
+    exec "$ROOT/scripts/uninstall-app.sh" "$@"
+    ;;
+  help | -h | --help)
+    usage
+    ;;
+  *)
+    echo "error: unknown command '$command'" >&2
+    echo "" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
