@@ -1,0 +1,154 @@
+:root {
+  --ifm-color-primary: #5b50f0;
+  --ifm-color-primary-dark: #4a3eea;
+  --ifm-color-primary-darker: #4034e7;
+  --ifm-color-primary-darkest: #2a1fd0;
+  --ifm-color-primary-light: #7268f4;
+  --ifm-color-primary-lighter: #8077f6;
+  --ifm-color-primary-lightest: #a49ef9;
+  --ifm-code-font-size: 92%;
+  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  --ifm-font-family-monospace: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
+  --ifm-heading-font-weight: 750;
+  --ifm-background-color: #fbfbfe;
+  --ifm-background-surface-color: #ffffff;
+  --ifm-toc-border-color: rgba(15, 23, 42, 0.08);
+  --docusaurus-highlighted-code-line-bg: rgba(91, 80, 240, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #9b94ff;
+  --ifm-color-primary-dark: #837bfa;
+  --ifm-color-primary-darker: #766df8;
+  --ifm-color-primary-darkest: #5549ee;
+  --ifm-color-primary-light: #b3adff;
+  --ifm-color-primary-lighter: #c0bbff;
+  --ifm-color-primary-lightest: #e5e2ff;
+  --ifm-background-color: #0b0d17;
+  --ifm-background-surface-color: #121523;
+  --ifm-toc-border-color: rgba(255, 255, 255, 0.1);
+  --docusaurus-highlighted-code-line-bg: rgba(155, 148, 255, 0.16);
+}
+
+.navbar {
+  backdrop-filter: saturate(180%) blur(18px);
+  background-color: rgba(251, 251, 254, 0.82);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+[data-theme='dark'] .navbar {
+  background-color: rgba(11, 13, 23, 0.82);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.navbar__logo img {
+  border-radius: 7px;
+}
+
+.navbar__title {
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.menu__link--active:not(.menu__link--sublist) {
+  border-radius: 6px;
+  background: rgba(91, 80, 240, 0.1);
+}
+
+[data-theme='dark'] .menu__link--active:not(.menu__link--sublist) {
+  background: rgba(155, 148, 255, 0.14);
+}
+
+.markdown h1:first-child {
+  font-size: 2.35rem;
+  letter-spacing: -0.035em;
+}
+
+.markdown h2 {
+  letter-spacing: -0.02em;
+  margin-top: 2.4rem;
+}
+
+.markdown > p:first-of-type {
+  font-size: 1.08rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+article a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+table {
+  display: table;
+  width: 100%;
+}
+
+.admonition {
+  border-radius: 12px;
+}
+
+.theme-code-block {
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.footer {
+  background: #0b0d17;
+}
+
+.footer--dark {
+  --ifm-footer-background-color: #0b0d17;
+}
+
+/* Documentation landing callout grid */
+.docs-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 26px 0 12px;
+}
+
+.docs-card {
+  display: block;
+  padding: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  background: var(--ifm-background-surface-color);
+}
+
+.docs-card:hover {
+  text-decoration: none;
+  color: inherit;
+  transform: translateY(-2px);
+  border-color: rgba(91, 80, 240, 0.35);
+  box-shadow: 0 10px 30px rgba(27, 22, 94, 0.1);
+}
+
+.docs-card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ifm-color-primary);
+}
+
+.docs-card span {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.92rem;
+}
+
+[data-theme='dark'] .docs-card {
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+[data-theme='dark'] .docs-card span {
+  color: var(--ifm-color-emphasis-600);
+}
+
+@media (max-width: 640px) {
+  .markdown h1:first-child {
+    font-size: 1.85rem;
+  }
+}
