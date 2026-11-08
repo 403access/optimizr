@@ -4,7 +4,8 @@
 
 Optimizr is a native macOS app that audits your Mac across three dimensions — **memory, CPU, and storage** — and turns the raw numbers into a prioritized list of concrete optimizations. Every finding explains what is happening, why it matters, how much space or performance it can recover, and the exact steps to resolve it.
 
-> Status: active development. See the [roadmap](docs-site/docs/roadmap.md) for what has shipped and what comes next.
+> Status: v0.1.0 MVP. **Docs:** https://403access.github.io/optimizr/docs/ · **Site:** https://403access.github.io/optimizr/  
+> See the [roadmap](docs-site/docs/roadmap.md) for what has shipped and what comes next.
 
 ## Why Optimizr
 
@@ -41,12 +42,21 @@ swift run Optimizr
 open dist/Optimizr.app
 ```
 
+### Run a headless scan
+
+```bash
+cd app
+swift run optimizr-scan             # summary
+swift run optimizr-scan --json      # machine-readable
+swift run optimizr-scan --markdown  # shareable report
+```
+
 ### Run the documentation site
 
 ```bash
 cd docs-site
-bun install
-bun run start
+npm install
+npm run start
 ```
 
 ### Preview the marketing site
@@ -62,7 +72,12 @@ python3 -m http.server 4173 --directory marketing
 - [Architecture](docs-site/docs/tech/architecture.md)
 - [Roadmap and changelog](docs-site/docs/roadmap.md)
 
-Once deployed, the docs live at `https://403access.github.io/optimizr/docs/` and the marketing site at `https://403access.github.io/optimizr/`.
+Live on GitHub Pages:
+
+- Docs: https://403access.github.io/optimizr/docs/
+- Marketing: https://403access.github.io/optimizr/
+
+Both are built from this repository and deployed by `.github/workflows/pages.yml`.
 
 ## Contributing
 

@@ -39,7 +39,7 @@ Make Mac performance **legible, actionable, and safe**. A user should be able to
 
 The current release is a **read-only auditor** with broad coverage and an opinionated report:
 
-- 20 findings across three categories.
+- 22 findings across three categories.
 - Stable IDs, severity thresholds, evidence, references, and remediation steps.
 - Category and free-text filtering; detail pane with Reveal in Finder and copyable commands.
 - Markdown export from the app; JSON and Markdown from the CLI.
@@ -81,9 +81,11 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 | --- | --- | --- | --- |
 | 2026-11-08 | Foundation | Monorepo, license, README, project layout | [`89b9368`](https://github.com/403access/optimizr/commit/89b9368) |
 | 2026-11-08 | App | Native scanner MVP, UI, CLI, tests, bundling | [`28757e0`](https://github.com/403access/optimizr/commit/28757e0) |
-| 2026-11-08 | Docs | Docusaurus product, engineering, and roadmap docs | _this commit_ |
-| 2026-11-08 | Marketing | Static marketing site | _see below_ |
-| 2026-11-08 | CI/CD | GitHub Actions CI, Pages deploy, release packaging | _see below_ |
+| 2026-11-08 | Docs | Docusaurus product, engineering, and roadmap docs | [`e77d867`](https://github.com/403access/optimizr/commit/e77d867) |
+| 2026-11-08 | Marketing | Static marketing site | [`09891a8`](https://github.com/403access/optimizr/commit/09891a8) |
+| 2026-11-08 | CI/CD | GitHub Actions CI, Pages deploy, release packaging | [`ee69015`](https://github.com/403access/optimizr/commit/ee69015) |
+| 2026-11-08 | CI fix | npm lockfile, manifest fix, pinned toolchain | [`3f4e4e9`](https://github.com/403access/optimizr/commit/3f4e4e9) |
+| 2026-11-08 | Deployment | Docs and marketing live on GitHub Pages | _this commit_ |
 
 ### #foundation — Project foundation
 
@@ -124,7 +126,7 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 - Technical docs: architecture, scanner engine, data model, build/run, testing, deployment, contributing.
 - Custom light/dark theme, strict broken-link checking, docs served at `/optimizr/docs/`.
 
-**Validation:** `bun install && bun run build` succeeds; all internal links resolve under the configured base path.
+**Validation:** `npm ci && npm run build` succeeds; all internal links resolve under the configured base path.
 
 **Docs:** this site.
 
@@ -147,12 +149,33 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 **What:**
 
 - `ci.yml`: macOS Swift build/test/smoke, app bundle, docs build.
-- `pages.yml`: Bun docs build, marketing + docs assembly, Pages artifact, OIDC deploy.
+- `pages.yml`: npm docs build, marketing + docs assembly, Pages artifact, OIDC deploy.
 - `release.yml`: tag-triggered test, bundle, zip, GitHub Release.
 - Pages configured with GitHub Actions as the source.
 - Public URLs: docs at `/optimizr/docs/`, marketing at `/optimizr/`.
 
 **Validation:** workflow runs green; both URLs return the deployed content; `workflow_dispatch` can re-deploy.
+
+### #public-deployment — Public deployment verified
+
+**Why:** A documentation site and a marketing page only count if they are reachable from a clean browser at the URLs the product advertises.
+
+**What:**
+
+- GitHub Pages configured with GitHub Actions as the build source.
+- `Deploy docs and marketing` run [`42477953402`](https://github.com/403access/optimizr/actions/runs/42477953402) deployed the combined artifact.
+- `CI` run [`42477485253`](https://github.com/403access/optimizr/actions/runs/42477485253) passed the macOS build/test/smoke/bundle job and the docs build.
+- Docs use `baseUrl: /optimizr/docs/`; the marketing site links to `docs/` relative to the artifact root.
+- The docs build uses npm with a committed `package-lock.json`, avoiding the Bun bootstrap that stalled on the Pages runner.
+
+**Validation:**
+
+- `https://403access.github.io/optimizr/` → HTTP 200, custom CSS/JS and icons load.
+- `https://403access.github.io/optimizr/docs/` → HTTP 200, Docusaurus CSS and assets load.
+- Spot checks for `/docs/roadmap`, `/docs/product/overview`, `/docs/product/safety-and-privacy`, `/docs/tech/architecture`, and `/docs/tech/build-and-run` all return 200.
+- Desktop and 390 px mobile screenshots were rendered from the live URLs.
+
+**Docs:** [Deployment](tech/deployment).
 
 ## Decision log
 
