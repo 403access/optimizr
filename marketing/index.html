@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Optimizr — Find the drag. Fix the Mac.</title>
+  <meta name="description" content="Optimizr is a native macOS app that scans memory, CPU, and storage, then gives you a prioritized list of fixes with evidence and exact commands. Read-only by design." />
+  <meta name="theme-color" content="#070810" />
+  <meta property="og:title" content="Optimizr — Find the drag. Fix the Mac." />
+  <meta property="og:description" content="A native macOS tune-up with evidence, priorities, and copy-ready fixes. No telemetry. No destructive one-click button." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="assets/icon-small.png" />
+  <link rel="apple-touch-icon" href="assets/icon.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <svg class="icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.2 2 4.8 13.1h5.5L10 22l8.4-11.1h-5.5L13.2 2Z" fill="currentColor"/></symbol>
+    <symbol id="i-memory" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="7" width="18" height="10" rx="2.5"/><path d="M7 10.5v3M11 10.5v3M15 10.5v3M19 10.5v3M6 17v3M10 17v3M14 17v3M18 17v3M6 4v3M10 4v3M14 4v3M18 4v3" stroke-linecap="round"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="6" y="6" width="12" height="12" rx="2.5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4" stroke-linecap="round"/></symbol>
+    <symbol id="i-drive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 14h18M7 17.2h.01M10.5 17.2h.01" stroke-linecap="round"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.8 11.8 2.2 2.2 4.4-4.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3M13 15h4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12.5 4.2 4.2L19 7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-1.04-.01-1.89-2.78.62-3.37-1.2-3.37-1.2-.45-1.18-1.11-1.49-1.11-1.49-.91-.63.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.9 1.56 2.35 1.11 2.92.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.05A9.35 9.35 0 0 1 12 6.84c.85 0 1.71.12 2.51.35 1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></symbol>
+  </svg>
+
+  <div class="aurora" aria-hidden="true">
+    <span class="aurora-a"></span>
+    <span class="aurora-b"></span>
+    <span class="aurora-c"></span>
+    <span class="grid"></span>
+  </div>
+
+  <header class="nav" id="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="./" aria-label="Optimizr home">
+        <img src="assets/icon-small.png" alt="" width="30" height="30" />
+        <span>Optimizr</span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#safety">Safety</a>
+        <a href="docs/">Docs</a>
+        <a href="https://github.com/403access/optimizr" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-primary btn-sm" href="#download">Download</a>
+        <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+          <svg width="20" height="20"><use href="#i-menu"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="mobile-menu" id="mobileMenu" hidden>
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#safety">Safety</a>
+      <a href="docs/">Docs</a>
+      <a href="https://github.com/403access/optimizr" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn btn-primary" href="#download">Download</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="hero wrap">
+      <div class="hero-copy reveal">
+        <div class="eyebrow"><span class="dot"></span> Native macOS · Read-only by design</div>
+        <h1>Find the drag.<br /><span class="grad">Fix the Mac.</span></h1>
+        <p class="lede">Optimizr scans memory, CPU, and storage in one pass, then hands you a prioritized list of fixes — with the evidence and the exact commands. It never deletes, kills, or changes anything on its own.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="https://github.com/403access/optimizr/releases/latest" target="_blank" rel="noopener">
+            Download for macOS
+            <svg width="16" height="16" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="docs/">Read the docs</a>
+        </div>
+        <ul class="hero-meta">
+          <li><svg width="13" height="13"><use href="#i-check"/></svg> macOS 14+</li>
+          <li><svg width="13" height="13"><use href="#i-check"/></svg> No telemetry</li>
+          <li><svg width="13" height="13"><use href="#i-check"/></svg> Open source</li>
+        </ul>
+      </div>
+
+      <div class="hero-visual reveal" data-delay="1">
+        <div class="floating-card float-b">
+          <span class="fc-label">Reclaimable</span>
+          <strong>20.6 GB</strong>
+          <span class="fc-sub">5 storage findings</span>
+        </div>
+
+        <div class="app-window">
+          <div class="window-bar">
+            <div class="traffic"><i></i><i></i><i></i></div>
+            <span class="window-title">Optimizr</span>
+            <span class="window-badge">scan complete</span>
+          </div>
+          <div class="app-body">
+            <aside class="app-side">
+              <div class="app-brand"><span class="app-logo"><svg width="13" height="13"><use href="#i-bolt"/></svg></span> Optimizr</div>
+              <div class="app-nav">
+                <div class="app-nav-item active"><span class="ani-dot indigo"></span> Overview <b>11</b></div>
+                <div class="app-nav-item"><span class="ani-dot violet"></span> Memory <b>3</b></div>
+                <div class="app-nav-item"><span class="ani-dot orange"></span> CPU <b>2</b></div>
+                <div class="app-nav-item"><span class="ani-dot teal"></span> Storage <b>5</b></div>
+              </div>
+              <div class="app-side-foot">
+                <div class="app-privacy"><svg width="13" height="13"><use href="#i-shield"/></svg> Read-only by design</div>
+                <div class="app-scan"><svg width="11" height="11"><use href="#i-arrow"/></svg> Scan again</div>
+              </div>
+            </aside>
+            <div class="app-main">
+              <div class="app-head">
+                <div>
+                  <span class="app-kicker">SYSTEM OVERVIEW</span>
+                  <h2>MacBook Air</h2>
+                  <span class="app-os">macOS 27.2 · Apple silicon</span>
+                </div>
+                <div class="score-ring"><span>61</span><small>of 100</small></div>
+              </div>
+              <div class="vitals">
+                <div class="vital">
+                  <div class="vital-top"><span>Memory</span><b>10.5 GB</b></div>
+                  <div class="bar"><i style="width:78%;background:linear-gradient(90deg,#fbbf24,#fb7185)"></i></div>
+                  <small>22% free · High pressure</small>
+                </div>
+                <div class="vital">
+                  <div class="vital-top"><span>CPU load</span><b>6.3</b></div>
+                  <div class="bar"><i style="width:58%;background:linear-gradient(90deg,#34d399,#fbbf24)"></i></div>
+                  <small>8 cores · 0.79× per core</small>
+                </div>
+                <div class="vital">
+                  <div class="vital-top"><span>Disk free</span><b>25.8 GB</b></div>
+                  <div class="bar"><i style="width:91%;background:linear-gradient(90deg,#fb7185,#f97316)"></i></div>
+                  <small>97% used of 994 GB</small>
+                </div>
+                <div class="vital">
+                  <div class="vital-top"><span>Swap</span><b>16.1 GB</b></div>
+                  <div class="bar"><i style="width:88%;background:linear-gradient(90deg,#f97316,#ef4444)"></i></div>
+                  <small>93% of swap file</small>
+                </div>
+              </div>
+              <div class="app-cats">
+                <div class="app-cat"><span class="ac-icon violet"><svg width="13" height="13"><use href="#i-memory"/></svg></span><div><b>60</b><small>Memory</small></div><em>3</em></div>
+                <div class="app-cat"><span class="ac-icon orange"><svg width="13" height="13"><use href="#i-cpu"/></svg></span><div><b>87</b><small>CPU</small></div><em>2</em></div>
+                <div class="app-cat"><span class="ac-icon teal"><svg width="13" height="13"><use href="#i-drive"/></svg></span><div><b>53</b><small>Storage</small></div><em>5</em></div>
+              </div>
+              <div class="app-list">
+                <div class="app-kicker row-head">TOP OPPORTUNITIES</div>
+                <div class="app-finding crit">
+                  <span class="sev"></span>
+                  <div><b>Swap is holding 16.1 GB</b><small>Memory · Critical</small></div>
+                  <em>Fix</em>
+                </div>
+                <div class="app-finding high">
+                  <span class="sev"></span>
+                  <div><b>App caches: 10.8 GB</b><small>Storage · High</small></div>
+                  <em>10.8 GB</em>
+                </div>
+                <div class="app-finding high">
+                  <span class="sev"></span>
+                  <div><b>36 background items installed</b><small>CPU · High</small></div>
+                  <em>Review</em>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats wrap reveal" aria-label="Project facts">
+      <div><strong>3</strong><span>lenses: memory, CPU, storage</span></div>
+      <div><strong>20</strong><span>explainable checks</span></div>
+      <div><strong>23</strong><span>unit tests in the core</span></div>
+      <div><strong>0</strong><span>files deleted by the app</span></div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="section wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow"><span class="dot"></span> Three lenses, one report</span>
+        <h2>Stop guessing what “slow” means.</h2>
+        <p>Each category gets its own score, evidence, and prioritized fixes. No scary "junk" totals. No fabricated problems.</p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card reveal">
+          <div class="feature-head">
+            <span class="f-icon violet"><svg width="20" height="20"><use href="#i-memory"/></svg></span>
+            <span class="tag">Memory</span>
+          </div>
+          <h3>See pressure, not a scary free-RAM number.</h3>
+          <p>macOS uses spare RAM for caches. Optimizr reads the signals that actually matter — pressure, swap, compression — and names the apps holding the working set.</p>
+          <div class="mini">
+            <div class="mini-row"><span>Memory pressure</span><b>78%</b></div>
+            <div class="bar"><i style="width:78%;background:linear-gradient(90deg,#fbbf24,#fb7185)"></i></div>
+            <div class="mini-chips"><span>Swap 16.1 GB</span><span>Compressed 11.9 GB</span></div>
+          </div>
+          <ul class="check-list">
+            <li>Pressure & swap diagnosis</li>
+            <li>Top memory owners with PIDs</li>
+            <li>Compressed-memory overhead</li>
+          </ul>
+        </article>
+
+        <article class="feature-card reveal" data-delay="1">
+          <div class="feature-head">
+            <span class="f-icon orange"><svg width="20" height="20"><use href="#i-cpu"/></svg></span>
+            <span class="tag">CPU</span>
+          </div>
+          <h3>Find what is actually eating the CPU.</h3>
+          <p>Load per core, thermal throttling, Low Power Mode, and every third-party launch agent — explained in terms of what it does to your Mac.</p>
+          <div class="mini">
+            <div class="mini-row"><span>Third-party background items</span><b>36</b></div>
+            <div class="bar"><i style="width:72%;background:linear-gradient(90deg,#fbbf24,#f97316)"></i></div>
+            <div class="mini-chips"><span>Load 6.3</span><span>8 cores</span></div>
+          </div>
+          <ul class="check-list">
+            <li>Load average vs. core count</li>
+            <li>Thermal limits & Low Power Mode</li>
+            <li>Login agents and uptime</li>
+          </ul>
+        </article>
+
+        <article class="feature-card reveal" data-delay="2">
+          <div class="feature-head">
+            <span class="f-icon teal"><svg width="20" height="20"><use href="#i-drive"/></svg></span>
+            <span class="tag">Storage</span>
+          </div>
+          <h3>Reclaim gigabytes without guessing.</h3>
+          <p>Caches, Xcode build products, simulators, device backups, Trash, Docker, large files, and local snapshots — measured and ranked, with the safe way out.</p>
+          <div class="mini">
+            <div class="mini-row"><span>Reclaimable</span><b>20.6 GB</b></div>
+            <div class="bar"><i style="width:64%;background:linear-gradient(90deg,#34d399,#22d3ee)"></i></div>
+            <div class="mini-chips"><span>App caches 10.8 GB</span><span>Disk 97% full</span></div>
+          </div>
+          <ul class="check-list">
+            <li>Targeted cache & developer cleanup</li>
+            <li>Large files and iOS backups</li>
+            <li>Time Machine snapshot review</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="how" class="section wrap split">
+      <div class="split-copy reveal">
+        <span class="eyebrow"><span class="dot"></span> How it works</span>
+        <h2>Scan. Review. Resolve.</h2>
+        <p class="section-lede">A full audit takes seconds. Every recommendation is reproducible, and nothing happens until you decide it should.</p>
+
+        <ol class="steps">
+          <li>
+            <span class="step-num">01</span>
+            <div><h3>Scan locally</h3><p>Read-only probes of memory, CPU, and storage. No account, no upload, no privileged helper.</p></div>
+          </li>
+          <li>
+            <span class="step-num">02</span>
+            <div><h3>Review the evidence</h3><p>Each finding shows severity, the numbers behind it, affected paths, and what the trade-off is.</p></div>
+          </li>
+          <li>
+            <span class="step-num">03</span>
+            <div><h3>Run the fix yourself</h3><p>Copy a command, open the right Settings pane, or reveal the folder. You stay in control.</p></div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="terminal-wrap reveal" data-delay="1">
+        <div class="terminal">
+          <div class="terminal-bar"><span class="t-dots"><i></i><i></i><i></i></span><span>optimizr-scan</span></div>
+          <pre><code><span class="t-dim">$</span> optimizr-scan
+
+<span class="t-bold">Optimizr scan — MacBook Air</span>
+macOS 27.2
+Health score: <span class="t-yellow">61/100</span> (Needs attention)
+Findings: 11
+Reclaimable: <span class="t-teal">20.6 GB</span>
+
+<span class="t-violet">== Memory ==</span>
+[<span class="t-red">CRITICAL</span>] Swap is holding 16.1 GB
+  → Restart to reset the working set
+  → Leave fewer apps running
+
+<span class="t-orange">== Storage ==</span>
+[<span class="t-orange">HIGH</span>] App caches: 10.8 GB
+  $ rm -rf ~/Library/Caches/*
+  <span class="t-dim">(review first; caches rebuild)</span>
+
+<span class="t-dim">Read-only scan completed in 9.4s.
+Nothing was changed.</span></code></pre>
+        </div>
+        <p class="terminal-note"><svg width="14" height="14"><use href="#i-shield"/></svg> The same engine powers the app and the CLI. Run it with <code>--json</code> for automation.</p>
+      </div>
+    </section>
+
+    <!-- Safety -->
+    <section id="safety" class="section wrap safety-section">
+      <div class="safety-card reveal">
+        <div class="safety-copy">
+          <span class="eyebrow light"><span class="dot"></span> Safety</span>
+          <h2>Read-only is the feature.</h2>
+          <p>Most Mac cleaners ask you to trust a black box with delete access. Optimizr removes that decision entirely: it observes, explains, and hands you the fix.</p>
+          <ul class="safety-list">
+            <li><svg width="15" height="15"><use href="#i-check"/></svg> No file deletion, process killing, or settings changes</li>
+            <li><svg width="15" height="15"><use href="#i-check"/></svg> No network code, telemetry, account, or update pings</li>
+            <li><svg width="15" height="15"><use href="#i-check"/></svg> No <code>/bin/sh</code>, no privileged helper, no root daemon</li>
+            <li><svg width="15" height="15"><use href="#i-check"/></svg> Destructive commands are copy-only and clearly labeled</li>
+          </ul>
+          <a class="text-link" href="docs/product/safety-and-privacy">Read the safety & privacy model <svg width="14" height="14"><use href="#i-arrow"/></svg></a>
+        </div>
+        <div class="safety-code">
+          <div class="code-card">
+            <div class="code-head"><span>How the scanner runs commands</span><span class="code-lang">Swift</span></div>
+            <pre><code><span class="t-violet">runner</span>.run(
+  <span class="t-teal">"/usr/bin/vm_stat"</span>,
+  arguments: [],
+  timeout: <span class="t-yellow">5</span>
+)
+
+<span class="t-dim">// Fixed executable + arguments.
+// No shell interpolation.
+// Bounded runtime. No mutation.</span></code></pre>
+          </div>
+          <div class="trust-pills">
+            <span><svg width="12" height="12"><use href="#i-shield"/></svg> MIT licensed</span>
+            <span><svg width="12" height="12"><use href="#i-terminal"/></svg> Audit the source</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detail mock -->
+    <section class="section wrap detail-section">
+      <div class="section-head reveal">
+        <span class="eyebrow"><span class="dot"></span> A report you can act on</span>
+        <h2>Every finding answers “why?” before “how?”</h2>
+        <p>Severity, measurable evidence, the trade-off, and numbered remediation. Export the whole report as Markdown when you need to share it.</p>
+      </div>
+
+      <div class="finding-demo reveal">
+        <div class="fd-head">
+          <div class="fd-meta">
+            <span class="pill crit">Critical</span>
+            <span class="pill">Memory</span>
+            <span class="pill">Read-only scan</span>
+          </div>
+          <h3>Swap is holding 16.1 GB</h3>
+          <p>93% of the swap file is in use. Memory that does not fit in RAM is being written to disk and read back on demand.</p>
+        </div>
+        <div class="fd-grid">
+          <div class="fd-metric"><span>Swap used</span><b>16.1 GB</b></div>
+          <div class="fd-metric"><span>Swap total</span><b>17.2 GB</b></div>
+          <div class="fd-metric"><span>RAM</span><b>16 GB</b></div>
+          <div class="fd-metric"><span>Pressure</span><b>78%</b></div>
+        </div>
+        <div class="fd-steps">
+          <div class="fd-step"><span class="fs-num">1</span><div><b>Find the apps that are swapping</b><p>Open Activity Monitor, sort the Memory tab, and quit what you are not using.</p><code>$ open -a 'Activity Monitor'</code></div></div>
+          <div class="fd-step"><span class="fs-num">2</span><div><b>Restart to reset the working set</b><p>A restart clears swap and compressed memory — the only reliable reset.</p></div></div>
+          <div class="fd-step"><span class="fs-num">3</span><div><b>Leave fewer apps running</b><p>Browsers with many tabs and Electron apps are the usual suspects.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="section wrap faq-section">
+      <div class="faq-intro reveal">
+        <span class="eyebrow"><span class="dot"></span> Questions</span>
+        <h2>The honest answers.</h2>
+        <p>More detail lives in the <a href="docs/product/faq">product FAQ</a>.</p>
+      </div>
+      <div class="faq-list reveal" data-delay="1">
+        <details>
+          <summary>Is this another Mac cleaner?</summary>
+          <p>No. Optimizr never deletes, kills, or changes anything. It audits and recommends. There is no “optimize everything” button because that is how cleaners break systems.</p>
+        </details>
+        <details>
+          <summary>Does it need Full Disk Access?</summary>
+          <p>No. It runs as your user with normal permissions. Some protected folders may be unreadable and are skipped rather than guessed.</p>
+        </details>
+        <details>
+          <summary>Why are some sizes estimates?</summary>
+          <p>Directory sizes come from <code>du</code> and are labeled “up to”. Actual recovery depends on what you remove and whether you empty the Trash. The report never pretends to know more than it does.</p>
+        </details>
+        <details>
+          <summary>Does it work on Intel Macs?</summary>
+          <p>The app targets macOS 14+ and uses no Apple-silicon-only APIs. Development and testing are on Apple silicon; Intel is on the validation roadmap.</p>
+        </details>
+        <details>
+          <summary>How do I install it?</summary>
+          <p>Grab the latest release, or build from source: <code>cd app && swift run Optimizr</code>. Local bundles are ad-hoc signed, not notarized yet.</p>
+        </details>
+        <details>
+          <summary>Is it open source?</summary>
+          <p>Yes, MIT licensed. The scanner, the thresholds, the command runner, and this site’s source are in one repository.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- Download -->
+    <section id="download" class="section wrap">
+      <div class="cta reveal">
+        <div class="cta-icon"><svg width="28" height="28"><use href="#i-bolt"/></svg></div>
+        <h2>Your Mac is not mysterious.</h2>
+        <p>Run one read-only scan. See the drag. Fix it on your terms.</p>
+        <div class="hero-cta center">
+          <a class="btn btn-primary" href="https://github.com/403access/optimizr/releases/latest" target="_blank" rel="noopener">Download for macOS <svg width="16" height="16"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-ghost" href="docs/tech/build-and-run">Build from source</a>
+        </div>
+        <span class="cta-fine">Free · open source · macOS 14+ · no account</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="./"><img src="assets/icon-small.png" alt="" width="28" height="28" /><span>Optimizr</span></a>
+        <p>Find the drag. Fix the Mac.<br />A read-only macOS tune-up.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="docs/product/overview">Overview</a>
+        <a href="docs/product/findings-catalog">Findings catalog</a>
+        <a href="docs/product/safety-and-privacy">Safety & privacy</a>
+        <a href="docs/product/faq">FAQ</a>
+      </div>
+      <div class="footer-col">
+        <h4>Engineering</h4>
+        <a href="docs/tech/architecture">Architecture</a>
+        <a href="docs/tech/scanner-engine">Scanner engine</a>
+        <a href="docs/tech/deployment">Deployment</a>
+        <a href="docs/roadmap">Roadmap</a>
+      </div>
+      <div class="footer-col">
+        <h4>Project</h4>
+        <a href="https://github.com/403access/optimizr" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/403access/optimizr/issues" target="_blank" rel="noopener">Issues</a>
+        <a href="https://github.com/403access/optimizr/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+      </div>
+    </div>
+    <div class="wrap footer-bottom">
+      <span>© <span id="year">2026</span> Oliver Molnar. Built with care, not telemetry.</span>
+      <span class="footer-note"><svg width="12" height="12"><use href="#i-shield"/></svg> Nothing leaves your Mac.</span>
+    </div>
+  </footer>
+
+  <script src="main.js" defer></script>
+</body>
+</html>
