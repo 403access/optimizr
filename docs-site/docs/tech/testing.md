@@ -87,7 +87,7 @@ The `ci` workflow runs on macOS for pushes and pull requests:
 2. `swift test`
 3. `swift run optimizr-scan` (smoke)
 4. `./scripts/build-app.sh` (bundle assembly)
-5. Docs build with Bun: `bun install --frozen-lockfile && bun run build`
+5. Docs build with npm: `npm ci --no-audit --no-fund && npm run build`
 
 The docs build is strict on broken links, so a broken documentation link fails CI.
 

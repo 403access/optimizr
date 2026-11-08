@@ -54,9 +54,9 @@ concurrency:
 
 steps:
   - checkout
-  - setup Bun
-  - bun install --frozen-lockfile (docs-site)
-  - bun run build (docs-site)
+  - setup Node 22
+  - npm ci (docs-site, lockfile committed)
+  - npm run build (docs-site)
   - assemble marketing + docs into site/
   - configure-pages
   - upload-pages-artifact (site/)
@@ -101,8 +101,8 @@ curl -H "Authorization: Bearer $GITHUB_TOKEN" \
 ```bash
 # 1. Build docs
 cd docs-site
-bun install --frozen-lockfile
-bun run build
+npm ci --no-audit --no-fund
+npm run build
 cd ..
 
 # 2. Assemble exactly like CI
@@ -167,7 +167,7 @@ To use a custom domain:
 | 404 on marketing `/` | Docs copied over root or `index.html` missing | Verify assembly order: marketing first, docs into `site/docs` |
 | Deploy job skipped | Permissions or environment missing | Ensure `pages: write`, `id-token: write`, and the `github-pages` environment |
 | Stale content | CDN/browser cache or superseded run | Check the latest run; hard refresh |
-| Docusaurus build fails on links | `onBrokenLinks: 'throw'` | Fix links locally with `bun run build` |
+| Docusaurus build fails on links | `onBrokenLinks: 'throw'` | Fix links locally with `npm run build` |
 
 ## Security notes
 
@@ -180,7 +180,7 @@ To use a custom domain:
 - [ ] `swift test` passes locally.
 - [ ] `swift run optimizr-scan` produces a valid report.
 - [ ] `./scripts/build-app.sh` succeeds.
-- [ ] `cd docs-site && bun run build` succeeds with no broken links.
+- [ ] `cd docs-site && npm run build` succeeds with no broken links.
 - [ ] Marketing links point to existing routes.
 - [ ] Roadmap and changelog updated in the same commit.
 - [ ] Push to `main`; verify the workflow and both public URLs.

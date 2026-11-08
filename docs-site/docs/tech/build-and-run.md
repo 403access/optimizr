@@ -12,7 +12,6 @@ sidebar_position: 4
 | macOS | 14 Sonoma | App deployment target |
 | Xcode / Swift | Swift 6.0 toolchain | Building the package |
 | Node.js | 20 | Docusaurus |
-| Bun (optional) | 1.2+ | Faster docs installs; npm works too |
 | Python + Pillow | 3.10 + Pillow 10 | Regenerating the app icon only |
 
 The project is developed with Xcode 27 / Swift 6.4 on Apple silicon, but the package declares macOS 14 and Swift 5 language mode.
@@ -72,8 +71,8 @@ The CLI uses the same `ScanEngine` as the app, so output is consistent.
 
 ```bash
 cd docs-site
-bun install          # or npm install
-bun run start        # http://localhost:3100/optimizr/docs/
+npm install
+npm run start        # http://localhost:3100/optimizr/docs/
 ```
 
 Docusaurus is configured with:
@@ -88,8 +87,8 @@ Local development serves the site under `/optimizr/docs/`, matching production. 
 Build and serve the production output:
 
 ```bash
-bun run build
-bun run serve
+npm run build
+npm run serve
 ```
 
 ## Preview the marketing site
@@ -102,7 +101,7 @@ Open `http://localhost:4173/`. The docs link points to `./docs/`, which only exi
 
 ```bash
 # Build docs
-cd docs-site && bun run build && cd ..
+cd docs-site && npm run build && cd ..
 
 # Assemble the same layout the workflow deploys
 rm -rf site && mkdir -p site
@@ -159,16 +158,16 @@ The relevant directory may not exist, may be unreadable, or the command may have
 
 ### Docs build fails on `onBrokenLinks`
 
-The configuration is strict on purpose. Fix the link or update the sidebar. Run `bun run build` locally before pushing.
+The configuration is strict on purpose. Fix the link or update the sidebar. Run `npm run build` locally before pushing.
 
 ### Port 3100 is in use
 
 ```bash
-bun run start -- --port 3200
+npm run start -- --port 3200
 ```
 
 ### Docusaurus cache issues
 
 ```bash
-bun run clear && bun run build
+npm run clear && npm run build
 ```

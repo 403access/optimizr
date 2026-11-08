@@ -26,18 +26,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          bun-version: 1.4.4
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs-site/package-lock.json
 
       - name: Install docs dependencies
         working-directory: docs-site
-        run: bun install --frozen-lockfile
+        run: npm ci --no-audit --no-fund
 
       - name: Build Docusaurus
         working-directory: docs-site
-        run: bun run build
+        run: npm run build
 
       - name: Assemble marketing site and docs
         run: |
