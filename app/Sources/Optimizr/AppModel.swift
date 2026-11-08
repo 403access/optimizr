@@ -17,6 +17,7 @@ final class AppModel: ObservableObject {
     @Published var selection: SidebarSelection = .overview
     @Published var selectedFindingID: String?
     @Published var severityFilter: Severity?
+    @Published var scopeFilter: FindingScope?
     @Published var searchText = ""
     @Published var scanPhase = ""
     @Published var lastError: String?
@@ -38,11 +39,15 @@ final class AppModel: ObservableObject {
         if let severityFilter {
             items = items.filter { $0.severity == severityFilter }
         }
+        if let scopeFilter {
+            items = items.filter { $0.scope == scopeFilter }
+        }
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         if !query.isEmpty {
             items = items.filter { finding in
                 finding.title.localizedCaseInsensitiveContains(query)
                     || finding.summary.localizedCaseInsensitiveContains(query)
+                    || finding.scope.title.localizedCaseInsensitiveContains(query)
                     || finding.tags.contains { $0.localizedCaseInsensitiveContains(query) }
             }
         }
@@ -66,17 +71,22 @@ final class AppModel: ObservableObject {
     func selectCategory(_ category: ScanCategory) {
         selection = .category(category)
         severityFilter = nil
+        scopeFilter = nil
         searchText = ""
         selectedFindingID = report.findings(for: category).first?.id
     }
 
     func selectFinding(_ finding: Finding) {
         selection = .category(finding.category)
+        severityFilter = nil
+        scopeFilter = nil
+        searchText = ""
         selectedFindingID = finding.id
     }
 
     func clearFilters() {
         severityFilter = nil
+        scopeFilter = nil
         searchText = ""
         selectedFindingID = filteredFindings.first?.id
     }

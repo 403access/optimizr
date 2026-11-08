@@ -16,7 +16,7 @@ public protocol OptimizrScanner: Sendable {
 }
 ```
 
-Each scanner returns findings only. Cross-cutting state such as the system snapshot is collected once by `SystemProfiler`, and the engine owns ordering and deduplication.
+Each scanner returns findings only. Every finding carries a `FindingScope` (native, third-party, mixed, or user data) in addition to its category and severity; the app, Markdown export, and CLI expose it. Cross-cutting state such as the system snapshot is collected once by `SystemProfiler`, and the engine owns ordering and deduplication.
 
 ```swift
 public struct ScanEngine: Sendable {
@@ -161,6 +161,20 @@ The measurement code uses `DispatchQueue.concurrentPerform` and guards the resul
 
 Output is parsed as `size|path` and sorted. The finding reports the total, the count, and up to eight files. The scan is bounded by a 12-second timeout. A file named with a newline is an accepted edge case; the parser skips malformed lines.
 
+### Protected apps
+
+`AppInventory.protectedApps(runner:)` lists bundles that the user cannot remove:
+
+```text
+/System/Applications/*.app
+/System/Applications/Utilities/*.app
+/Applications/*.app with the restricted flag
+```
+
+System paths are protected by construction. For `/Applications`, Optimizr resolves symlinks (Safari points into `/System/Cryptexes`) and runs one `ls -ldO` over the directory to find the `restricted` flag. Sizes come from a single multi-path `du -sk` over only the protected bundles, so the check stays cheap even on a Mac with many apps.
+
+The finding fires at ≥ 500 MB total, is informational, and carries no reclaimable bytes. The point is to make non-removable space visible, not to suggest deleting it.
+
 ### Time Machine
 
 `tmutil listlocalsnapshots /` is parsed for `com.apple.TimeMachine` entries. The finding reports the count and the latest snapshot. No size is claimed, because public tooling does not expose a reliable per-snapshot size.
@@ -178,7 +192,8 @@ All parsers are pure static functions, which is why the test suite can run witho
 | `LoadAverageParser` | `sysctl vm.loadavg` | 1/5/15 minute loads |
 | `ThermalState.parse` | `pmset -g therm` | Speed limit, warning level |
 | `PowerSettingsParser` | `pmset -g` | Low Power Mode flag |
-| `DuParser` | `du -sk` | Bytes |
+| `DuParser` | single-path `du -sk` | Bytes |
+| `DuListingParser` | multi-path `du -sk` | Path-to-bytes map |
 | `LargeFileParser` | `find`/`stat` output | Path and bytes |
 
 Parsers return `nil` or an empty array when the output is not recognizable. They do not throw and do not assert.
@@ -190,11 +205,12 @@ Parsers return `nil` or an empty array when the output is not recognizable. They
 3. Set severity from a documented threshold. Prefer a small helper over nesting ternaries.
 4. Provide at least one remediation step. Use `.command` only when the command is genuinely useful and safe to present; include a warning in `detail` for anything destructive.
 5. Set `reclaimableBytes` only when the finding is about space, and avoid double counting with existing targets.
-6. Add evidence metrics that let a skeptical user verify the claim.
-7. Add paths for Reveal in Finder when applicable.
-8. Update the [findings catalog](../product/findings-catalog) and [roadmap](../roadmap).
-9. Add a parser or scoring test if new parsing or math was introduced.
-10. Run:
+6. Set `scope` to where the condition lives, not to who runs the fix.
+7. Add evidence metrics that let a skeptical user verify the claim.
+8. Add paths for Reveal in Finder when applicable.
+9. Update the [findings catalog](../product/findings-catalog) and [roadmap](../roadmap).
+10. Add a parser or scoring test if new parsing or math was introduced.
+11. Run:
 
 ```bash
 ./scripts/optimizr test

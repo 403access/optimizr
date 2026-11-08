@@ -37,6 +37,7 @@ struct FindingDetailView: View {
             HStack(spacing: 6) {
                 CategoryPill(category: finding.category)
                 SeverityBadge(severity: finding.severity)
+                ScopeBadge(scope: finding.scope)
                 if let bytes = finding.reclaimableBytes, bytes > 0 {
                     HStack(spacing: 4) {
                         Image(systemName: "internaldrive")
@@ -72,6 +73,15 @@ struct FindingDetailView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .textSelection(.enabled)
+
+            HStack(alignment: .top, spacing: 5) {
+                Image(systemName: finding.scope.systemImage)
+                    .font(.system(size: 9, weight: .semibold))
+                Text("\(finding.scope.title): \(finding.scope.detail)")
+                    .font(.system(size: 9.5))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .foregroundStyle(finding.scope.color)
         }
     }
 

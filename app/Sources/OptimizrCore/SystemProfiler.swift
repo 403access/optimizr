@@ -147,6 +147,22 @@ public enum DuParser {
     }
 }
 
+public enum DuListingParser {
+    /// Parses multi-path `du -sk` output into a path-to-bytes map.
+    public static func sizes(_ output: String) -> [String: Int64] {
+        var result: [String: Int64] = [:]
+        for line in output.split(separator: "\n") {
+            let text = String(line)
+            guard let tab = text.firstIndex(of: "\t") else { continue }
+            guard let kilobytes = Int64(text[..<tab].trimmingCharacters(in: .whitespaces)) else { continue }
+            let path = String(text[text.index(after: tab)...])
+            guard !path.isEmpty else { continue }
+            result[path] = kilobytes * 1_024
+        }
+        return result
+    }
+}
+
 public struct LargeFile: Identifiable, Codable, Sendable, Hashable {
     public let path: String
     public let bytes: Int64

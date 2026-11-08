@@ -189,6 +189,44 @@ struct CategoryView: View {
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
+
+            Menu {
+                Button {
+                    model.scopeFilter = nil
+                } label: {
+                    Text("All scopes")
+                }
+                Divider()
+                ForEach(FindingScope.allCases) { scope in
+                    Button {
+                        model.scopeFilter = scope
+                    } label: {
+                        HStack {
+                            Label(scope.title, systemImage: scope.systemImage)
+                            if model.scopeFilter == scope {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: model.scopeFilter?.systemImage ?? "square.3.layers.3d")
+                        .font(.system(size: 9, weight: .semibold))
+                    Text(model.scopeFilter?.shortTitle ?? "Scope")
+                        .font(.system(size: 10.5, weight: .medium))
+                }
+                .padding(.horizontal, 7)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(model.scopeFilter.map { $0.color.opacity(0.13) } ?? Color.primary.opacity(0.05))
+                )
+                .foregroundStyle(model.scopeFilter?.color ?? Color.secondary)
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
         }
         .padding(.horizontal, 11)
         .padding(.vertical, 9)

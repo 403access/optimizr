@@ -140,6 +140,22 @@ final class ParserTests: XCTestCase {
         XCTAssertNil(DuParser.bytes("garbage"))
     }
 
+    func testParsesMultiPathDuOutput() {
+        let output = """
+        1024\t/Applications/Example.app
+        2048\t/System/Applications/Mail.app
+        """
+        let sizes = DuListingParser.sizes(output)
+        XCTAssertEqual(sizes["/Applications/Example.app"], 1_024 * 1_024)
+        XCTAssertEqual(sizes["/System/Applications/Mail.app"], 2_048 * 1_024)
+    }
+
+    func testClassifiesProtectedAppBundles() {
+        XCTAssertEqual(AppInventory.protection(forPath: "/System/Applications/Mail.app", restricted: false), .system)
+        XCTAssertEqual(AppInventory.protection(forPath: "/Applications/Safari.app", restricted: true), .restricted)
+        XCTAssertNil(AppInventory.protection(forPath: "/Applications/Figma.app", restricted: false))
+    }
+
     func testParsesLargeFiles() {
         let moviePath = Paths.home.appendingPathComponent("Movies/Export.mov").path
         let output = """
@@ -168,6 +184,7 @@ final class ModelTests: XCTestCase {
             summary: "Summary",
             detail: "Detail",
             severity: severity,
+            scope: .native,
             reclaimableBytes: bytes
         )
     }
@@ -247,6 +264,7 @@ final class ModelTests: XCTestCase {
             summary: item.summary,
             detail: item.detail,
             severity: item.severity,
+            scope: .thirdParty,
             reclaimableBytes: item.reclaimableBytes,
             metrics: [Metric(label: "Reclaimable", value: "4 GB", isPrimary: true)],
             remediation: [RemediationStep(title: "Clear it", detail: "Safely", command: "rm -rf ~/Library/Caches/*", kind: .command)]
@@ -262,6 +280,7 @@ final class ModelTests: XCTestCase {
         XCTAssertTrue(markdown.contains("App caches: 4 GB"))
         XCTAssertTrue(markdown.contains("rm -rf ~/Library/Caches/*"))
         XCTAssertTrue(markdown.contains("Health score"))
+        XCTAssertTrue(markdown.contains("**Scope:** Third-party"))
     }
 
     func testSnapshotDerivedValues() {

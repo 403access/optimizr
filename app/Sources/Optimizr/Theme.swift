@@ -31,6 +31,17 @@ extension ScanCategory {
     }
 }
 
+extension FindingScope {
+    var color: Color {
+        switch self {
+        case .native: return Palette.storage
+        case .thirdParty: return Palette.cpu
+        case .mixed: return Palette.medium
+        case .userData: return Palette.memory
+        }
+    }
+}
+
 extension Severity {
     var color: Color {
         switch self {

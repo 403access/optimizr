@@ -129,6 +129,7 @@ public struct MemoryScanner: OptimizrScanner {
             summary: "macOS is under \(pressureLabel(pressure).lowercased()) memory pressure. Apps are being compressed and pushed to swap, which makes switching apps and opening new windows feel slow.",
             detail: memoryPressureDetail(pressure: pressure, swap: swap, vm: vm),
             severity: severity,
+            scope: .native,
             metrics: metrics,
             remediation: steps,
             references: [
@@ -183,6 +184,7 @@ public struct MemoryScanner: OptimizrScanner {
             summary: "\(Format.percent(swap.usedFraction)) of the swap file is in use. Memory that does not fit in RAM is being written to disk and read back on demand.",
             detail: "Swap is a safety valve, not a problem by itself — but sustained swap use means your working set is larger than physical memory. On a \(Format.bytes(totalMemory)) Mac, \(Format.bytes(used)) of swap indicates that apps are competing for RAM. The fix is to reduce concurrent memory use, not to \"clear\" swap with a cleaner utility; macOS manages the swap file itself.",
             severity: severity,
+            scope: .native,
             reclaimableBytes: nil,
             metrics: [
                 Metric(label: "Swap used", value: Format.bytes(swap.usedBytes), isPrimary: true),
@@ -239,6 +241,7 @@ public struct MemoryScanner: OptimizrScanner {
             summary: "The largest memory consumer on this Mac holds \(Format.percent(fraction)) of physical RAM. Its footprint is large enough to affect overall memory pressure.",
             detail: "Process \(process.pid) reports a resident set size of \(Format.bytes(process.memoryBytes)). RSS includes memory shared with other processes, so it is an upper-bound estimate, but a footprint this large still makes the app a good candidate to restart or quit when not in use.",
             severity: severity,
+            scope: .mixed,
             metrics: top.map { sample in
                 Metric(
                     label: "\(sample.displayName) · PID \(sample.pid)",
@@ -277,6 +280,7 @@ public struct MemoryScanner: OptimizrScanner {
             summary: "\(Format.percent(fraction)) of physical RAM is occupied by compressed pages. Every access to those pages costs CPU time to decompress.",
             detail: "The memory compressor is doing its job: it is squeezing inactive pages instead of swapping them to disk. When compressed memory grows this large, though, the CPU overhead of decompression becomes noticeable. Reducing the number of open apps is the most direct fix.",
             severity: severity,
+            scope: .native,
             metrics: [
                 Metric(label: "Compressed", value: Format.bytes(vm.compressedBytes), isPrimary: true),
                 Metric(label: "Share of RAM", value: Format.percent(fraction)),
@@ -400,6 +404,7 @@ public struct CPUScanner: OptimizrScanner {
             summary: "The 1-minute load average is \(Format.decimal(load1)) across \(cores) cores. Processes are waiting for CPU time, so the Mac will feel less responsive.",
             detail: "Load average counts runnable and uninterruptible processes. A value near the number of cores means the CPU is fully booked; values above it mean work is queueing. The top CPU consumers are listed in the evidence, and prolonged high load can also raise temperatures and trigger throttling.",
             severity: severity,
+            scope: .native,
             metrics: metrics,
             remediation: steps,
             references: [
@@ -437,6 +442,7 @@ public struct CPUScanner: OptimizrScanner {
             summary: "One process is consuming a large share of the available CPU. Values above 100% mean it is using more than one core.",
             detail: "CPU percentages from `ps` are sampled over the process lifetime, not an instant, so treat them as a strong hint rather than a precise reading. If this process has been busy for a while, quitting or restarting it will usually return the CPU to idle.",
             severity: severity,
+            scope: .mixed,
             metrics: Array(metrics),
             remediation: [
                 RemediationStep(
@@ -479,6 +485,7 @@ public struct CPUScanner: OptimizrScanner {
             summary: "macOS is limiting CPU speed to keep the chip within a safe temperature range. Sustained throttling means less performance for the same workload.",
             detail: "Throttling is normal during short bursts, but sustained limits below 100% usually mean the cooling system is struggling. Common causes are a heavy workload in a warm room, blocked vents, or dust build-up on an older Mac.",
             severity: severity,
+            scope: .native,
             metrics: metrics,
             remediation: [
                 RemediationStep(
@@ -513,6 +520,7 @@ public struct CPUScanner: OptimizrScanner {
             summary: "macOS is reducing background activity and peak performance to save battery. That is a feature — but it is also why some tasks feel slower.",
             detail: "Low Power Mode reduces display brightness, background refreshes, and CPU boost. On a laptop running on battery it is often the right trade-off. If you are plugged in and want maximum performance, turn it off.",
             severity: .info,
+            scope: .native,
             metrics: [Metric(label: "Mode", value: "Low Power", isPrimary: true)],
             remediation: [
                 RemediationStep(
@@ -560,6 +568,7 @@ public struct CPUScanner: OptimizrScanner {
             summary: "Login agents and daemons launch automatically and can wake up to consume CPU, memory, and battery even when you are not using the app.",
             detail: "Each launch agent is a small service with its own schedule. Individually they are cheap; collectively they cause background CPU spikes and prevent the Mac from idling. Review the list and disable updaters or helpers for apps you no longer use. Do not remove Apple's own services.",
             severity: severity,
+            scope: .thirdParty,
             metrics: metrics,
             remediation: [
                 RemediationStep(
@@ -598,6 +607,7 @@ public struct CPUScanner: OptimizrScanner {
             summary: "Long uptimes let memory grow, stale background services accumulate, and pending system updates wait. A restart is the simplest tune-up.",
             detail: "macOS is stable enough to run for weeks, but apps and helpers leak memory over time. Pending security updates also require a restart to take effect. Restarting is quick and resolves several findings at once.",
             severity: severity,
+            scope: .native,
             metrics: [
                 Metric(label: "Uptime", value: Format.uptime(uptime), isPrimary: true),
                 Metric(label: "Days", value: "\(days)")
@@ -644,6 +654,9 @@ public struct StorageScanner: OptimizrScanner {
 
         findings.append(contentsOf: directoryFindings())
         findings.append(contentsOf: largeFileFindings())
+        if let protectedApps = protectedAppsFinding() {
+            findings.append(protectedApps)
+        }
         if let snapshotFinding = localSnapshotsFinding() {
             findings.append(snapshotFinding)
         }
@@ -676,6 +689,7 @@ public struct StorageScanner: OptimizrScanner {
             summary: "The startup disk is \(Format.percent(1 - freeFraction)) full. Below roughly 10% free, macOS has less room for swap, updates, and temporary files.",
             detail: "APFS needs free space to write, snapshot, and update files. A nearly full disk can slow the whole system — including memory pressure, because swap needs room. The storage findings below show where the space went. Clear the largest safe items first, then empty the Trash so the space is actually released.",
             severity: severity,
+            scope: .native,
             metrics: [
                 Metric(label: "Free", value: Format.bytes(free), isPrimary: true),
                 Metric(label: "Used", value: Format.bytes(total - free)),
@@ -715,6 +729,7 @@ public struct StorageScanner: OptimizrScanner {
         let title: String
         let summary: String
         let detail: String
+        let scope: FindingScope
         let url: URL
         let reportThreshold: Int64
         let highThreshold: Int64
@@ -741,6 +756,7 @@ public struct StorageScanner: OptimizrScanner {
                 title: "App caches",
                 summary: "Apps store replayable data in ~/Library/Caches so they can start faster. It is safe to clear, though apps rebuild it.",
                 detail: "Caches are designed to be disposable. macOS and individual apps recreate them on demand. Quit open apps before clearing caches to avoid a half-written state, and expect the first launch afterward to feel slower.",
+                scope: .mixed,
                 url: caches,
                 reportThreshold: 1 * ByteMath.gigabyte,
                 highThreshold: 5 * ByteMath.gigabyte,
@@ -767,6 +783,7 @@ public struct StorageScanner: OptimizrScanner {
                 title: "Homebrew download cache",
                 summary: "Homebrew keeps downloaded bottles and source archives so reinstalls are fast. They are not needed after installation.",
                 detail: "The Homebrew cache can grow to many gigabytes and is never used by installed packages. `brew cleanup` removes old versions and the download cache; it is reversible by downloading again.",
+                scope: .thirdParty,
                 url: homebrew,
                 reportThreshold: 500 * ByteMath.megabyte,
                 highThreshold: 2 * ByteMath.gigabyte,
@@ -793,6 +810,7 @@ public struct StorageScanner: OptimizrScanner {
                 title: "Xcode DerivedData",
                 summary: "Intermediate build products and indexes. Xcode recreates them the next time you build.",
                 detail: "DerivedData is one of the safest large developer caches to remove. Xcode rebuilds it automatically. The first build after clearing will take longer because indexes and object files are missing.",
+                scope: .native,
                 url: derivedData,
                 reportThreshold: 1 * ByteMath.gigabyte,
                 highThreshold: 5 * ByteMath.gigabyte,
@@ -813,6 +831,7 @@ public struct StorageScanner: OptimizrScanner {
                 title: "iOS DeviceSupport files",
                 summary: "Debug symbols and support files for every iOS version you have connected. Old versions are usually safe to remove.",
                 detail: "Each iOS release adds a DeviceSupport folder. Once you no longer debug on that OS version, the folder is dead weight. Keep the versions of devices you still test with.",
+                scope: .native,
                 url: deviceSupport,
                 reportThreshold: 2 * ByteMath.gigabyte,
                 highThreshold: 10 * ByteMath.gigabyte,
@@ -839,6 +858,7 @@ public struct StorageScanner: OptimizrScanner {
                 title: "Xcode archives",
                 summary: "Archived builds kept for App Store submission and symbolication. Old archives are often the largest Xcode artifact.",
                 detail: "Archives contain the app binary and dSYMs for a shipped build. Keep archives you may still need for crash symbolication or resubmission. Delete ones for apps or versions you no longer support.",
+                scope: .native,
                 url: archives,
                 reportThreshold: 1 * ByteMath.gigabyte,
                 highThreshold: 5 * ByteMath.gigabyte,
@@ -864,6 +884,7 @@ public struct StorageScanner: OptimizrScanner {
                 title: "Simulator devices",
                 summary: "Every iOS and watchOS simulator you have created keeps its own data, apps, and screenshots.",
                 detail: "Simulators are useful, but old or unavailable devices pile up. `xcrun simctl delete unavailable` removes devices whose runtime is no longer installed. You can also erase individual simulators in Xcode's Devices window.",
+                scope: .native,
                 url: simulators,
                 reportThreshold: 3 * ByteMath.gigabyte,
                 highThreshold: 10 * ByteMath.gigabyte,
@@ -889,6 +910,7 @@ public struct StorageScanner: OptimizrScanner {
                 title: "iPhone and iPad backups",
                 summary: "Local device backups in ~/Library/Application Support/MobileSync/Backup.",
                 detail: "iTunes and Finder backups can be many gigabytes each, and older backups of replaced devices are easy to forget. Review them in Finder's device management window before deleting.",
+                scope: .native,
                 url: backups,
                 reportThreshold: 2 * ByteMath.gigabyte,
                 highThreshold: 10 * ByteMath.gigabyte,
@@ -910,6 +932,7 @@ public struct StorageScanner: OptimizrScanner {
                 title: "Trash",
                 summary: "Files in the Trash still occupy disk space until the Trash is emptied.",
                 detail: "Emptying the Trash is permanent. Check the contents first, especially if you recently deleted a project or a large download.",
+                scope: .native,
                 url: trash,
                 reportThreshold: 200 * ByteMath.megabyte,
                 highThreshold: 2 * ByteMath.gigabyte,
@@ -936,6 +959,7 @@ public struct StorageScanner: OptimizrScanner {
                 title: "Docker data",
                 summary: "Images, containers, and build caches stored in Docker's disk image.",
                 detail: "Docker's virtual disk grows but does not shrink automatically when you delete containers. `docker system prune` removes unused data. If you no longer use Docker, uninstalling it is the bigger win.",
+                scope: .thirdParty,
                 url: docker,
                 reportThreshold: 5 * ByteMath.gigabyte,
                 highThreshold: 20 * ByteMath.gigabyte,
@@ -985,6 +1009,7 @@ public struct StorageScanner: OptimizrScanner {
                 summary: target.summary,
                 detail: target.detail,
                 severity: severity,
+                scope: target.scope,
                 reclaimableBytes: bytes,
                 metrics: [
                     Metric(label: "Reclaimable", value: Format.bytes(bytes), isPrimary: true),
@@ -1084,6 +1109,7 @@ public struct StorageScanner: OptimizrScanner {
             summary: "Optimizr found files larger than 1 GB in Downloads, Desktop, Documents, or Movies. They are the fastest place to recover a big chunk of space.",
             detail: "Large files are often old installers, disk images, video exports, or extracted archives. Review them in Finder and delete or move the ones you no longer need. Optimizr does not delete anything for you; open the containing folder and decide case by case.",
             severity: severity,
+            scope: .userData,
             reclaimableBytes: total,
             metrics: metrics,
             remediation: [
@@ -1108,6 +1134,68 @@ public struct StorageScanner: OptimizrScanner {
             paths: Array(files.prefix(8).map(\.path)),
             tags: ["downloads", "large-files"]
         )]
+    }
+
+    // MARK: Protected apps
+
+    /// Lists app bundles that System Integrity Protection or the `restricted`
+    /// file flag prevents the user from removing. These are informational: the
+    /// space is real, but uninstalling is not a supported way to reclaim it.
+    private func protectedAppsFinding() -> Finding? {
+        let apps = AppInventory.protectedApps(runner: runner)
+        guard !apps.isEmpty else { return nil }
+
+        let total = apps.reduce(Int64(0)) { $0 + $1.bytes }
+        guard total >= 500 * ByteMath.megabyte || (apps.first?.bytes ?? 0) >= 250 * ByteMath.megabyte else {
+            return nil
+        }
+
+        var metrics: [Metric] = [
+            Metric(label: "Protected apps", value: "\(apps.count)", isPrimary: true),
+            Metric(label: "Total size", value: Format.bytes(total)),
+            Metric(label: "Largest", value: apps.first?.name ?? "None")
+        ]
+        for app in apps.prefix(8) {
+            metrics.append(Metric(
+                label: "\(app.name) · \(app.protection.shortTitle)",
+                value: Format.bytes(app.bytes)
+            ))
+        }
+
+        let top = apps.prefix(8)
+        return Finding(
+            id: "storage.protected-apps",
+            category: .storage,
+            title: "\(apps.count) protected apps use \(Format.bytes(total))",
+            summary: "These app bundles are owned by macOS or carry the restricted flag. System Integrity Protection prevents removing or modifying them, so their disk usage is not recoverable by uninstalling.",
+            detail: "Optimizr found protected bundles in /System/Applications or under /Applications with the restricted flag. SIP stops even an administrator from deleting or changing them, and macOS may restart required system apps and agents automatically. The space they occupy is therefore not a normal optimization target: do not disable SIP, and do not try to delete these bundles. Their user data can still be reviewed separately, but the app itself stays.",
+            severity: .info,
+            scope: .native,
+            metrics: metrics,
+            remediation: [
+                RemediationStep(
+                    title: "Leave the bundles in place",
+                    detail: "Do not delete or modify apps under /System or bundles carrying the restricted flag. Disabling System Integrity Protection to remove them is not a supported optimization and weakens the Mac's security.",
+                    kind: .manual
+                ),
+                RemediationStep(
+                    title: "Review the app's data instead",
+                    detail: "User data lives outside the bundle in ~/Library/Containers, ~/Library/Group Containers, and ~/Library/Application Support. Use the app's own settings to clear downloads or caches.",
+                    kind: .manual
+                ),
+                RemediationStep(
+                    title: "Open Storage settings",
+                    detail: "System Settings → General → Storage shows Apple's own breakdown and recommendations for system data.",
+                    command: "open 'x-apple.systempreferences:com.apple.settings.Storage'",
+                    kind: .settings
+                )
+            ],
+            references: [
+                Reference(title: "Apple Support: System Integrity Protection", url: "https://support.apple.com/guide/security/system-integrity-protection-secb7ea06b49/web")
+            ],
+            paths: top.map(\.path),
+            tags: ["protected", "sip", "system", "apps"]
+        )
     }
 
     // MARK: Time Machine local snapshots
@@ -1138,6 +1226,7 @@ public struct StorageScanner: OptimizrScanner {
             summary: "APFS keeps local snapshots on the startup disk between Time Machine backups. They consume space that macOS may reclaim only under pressure.",
             detail: "Local snapshots are useful for quick restores, but they can hold onto deleted files and occupy tens of gigabytes. macOS thins them automatically, and `tmutil thinlocalsnapshots` asks it to reclaim space sooner. Do not delete snapshots if Time Machine has not completed a recent backup.",
             severity: severity,
+            scope: .native,
             metrics: metrics,
             remediation: [
                 RemediationStep(

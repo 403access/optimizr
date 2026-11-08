@@ -54,7 +54,7 @@ struct OptimizrScanCommand {
             guard !findings.isEmpty else { continue }
             print("== \(category.title) ==")
             for finding in findings {
-                var line = "[\(finding.severity.title.uppercased())] \(finding.title)"
+                var line = "[\(finding.severity.title.uppercased()) · \(finding.scope.title)] \(finding.title)"
                 if let bytes = finding.reclaimableBytes, bytes > 0 {
                     line += "  (up to \(Format.bytes(bytes)))"
                 }

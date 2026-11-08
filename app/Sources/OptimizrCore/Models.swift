@@ -35,6 +35,63 @@ public enum ScanCategory: String, Codable, CaseIterable, Sendable, Identifiable 
     }
 }
 
+// MARK: - Scope
+
+/// Where a finding's condition lives. The fix may still be performed by the
+/// user; this describes ownership of the mechanism, not of the remedy.
+public enum FindingScope: String, Codable, CaseIterable, Sendable, Identifiable {
+    /// A macOS or Apple-owned subsystem, setting, tool, or data store.
+    case native
+    /// Non-Apple software or an artifact it created.
+    case thirdParty
+    /// Depends on the app the user runs, or a native location holding third-party data.
+    case mixed
+    /// The user's own files rather than a vendor's software.
+    case userData
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .native: return "Native"
+        case .thirdParty: return "Third-party"
+        case .mixed: return "Mixed"
+        case .userData: return "User data"
+        }
+    }
+
+    public var shortTitle: String {
+        switch self {
+        case .native: return "Native"
+        case .thirdParty: return "3rd-party"
+        case .mixed: return "Mixed"
+        case .userData: return "Data"
+        }
+    }
+
+    public var detail: String {
+        switch self {
+        case .native:
+            return "Managed by macOS or Apple software. The fix is usually a system control or a restart."
+        case .thirdParty:
+            return "Owned by non-Apple software. Prefer the vendor's own tooling or uninstaller."
+        case .mixed:
+            return "Depends on the app you run, or a native location holding third-party data."
+        case .userData:
+            return "Your own files. Only you can decide whether they are still needed."
+        }
+    }
+
+    public var systemImage: String {
+        switch self {
+        case .native: return "apple.logo"
+        case .thirdParty: return "shippingbox"
+        case .mixed: return "square.3.layers.3d"
+        case .userData: return "person.crop.circle"
+        }
+    }
+}
+
 // MARK: - Severity
 
 public enum Severity: Int, Codable, CaseIterable, Sendable, Comparable {
@@ -142,6 +199,8 @@ public struct Finding: Identifiable, Codable, Sendable, Hashable {
     public let summary: String
     public let detail: String
     public let severity: Severity
+    /// Where the condition lives: native, third-party, mixed, or user data.
+    public let scope: FindingScope
     /// Estimated bytes that can be recovered. Nil when the finding is not about space.
     public let reclaimableBytes: Int64?
     public let metrics: [Metric]
@@ -158,6 +217,7 @@ public struct Finding: Identifiable, Codable, Sendable, Hashable {
         summary: String,
         detail: String,
         severity: Severity,
+        scope: FindingScope,
         reclaimableBytes: Int64? = nil,
         metrics: [Metric] = [],
         remediation: [RemediationStep] = [],
@@ -171,6 +231,7 @@ public struct Finding: Identifiable, Codable, Sendable, Hashable {
         self.summary = summary
         self.detail = detail
         self.severity = severity
+        self.scope = scope
         self.reclaimableBytes = reclaimableBytes
         self.metrics = metrics
         self.remediation = remediation
@@ -371,6 +432,8 @@ public extension ScanReport {
             lines.append("")
             for finding in items {
                 lines.append("### \(finding.title) — \(finding.severity.title)")
+                lines.append("")
+                lines.append("- **Scope:** \(finding.scope.title) — \(finding.scope.detail)")
                 lines.append("")
                 lines.append(finding.summary)
                 lines.append("")

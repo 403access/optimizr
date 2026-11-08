@@ -313,6 +313,13 @@ private struct OverviewView: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
+                if !scopeSummary.isEmpty {
+                    Text(scopeSummary)
+                        .font(.system(size: 9.5, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
                 if report.totalReclaimableBytes > 0 {
                     HStack(spacing: 5) {
                         Image(systemName: "internaldrive")
@@ -385,6 +392,15 @@ private struct OverviewView: View {
             }
         }
         .cardSurface()
+    }
+
+    private var scopeSummary: String {
+        FindingScope.allCases.compactMap { scope in
+            let count = report.findings.lazy.filter { $0.scope == scope }.count
+            guard count > 0 else { return nil }
+            return "\(count) \(scope.shortTitle.lowercased())"
+        }
+        .joined(separator: " · ")
     }
 
     private var perCoreLoad: Double {

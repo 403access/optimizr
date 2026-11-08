@@ -19,6 +19,19 @@ This page is the contract between the scanners and the user. It documents every 
 
 Reclaimable bytes are estimates, displayed as "up to". They sum into the storage category total and the report total. Findings that are not about space carry no estimate.
 
+## Native vs third-party scope
+
+Findings are classified by **where the condition lives**, not by who performs the fix. A native finding can still require you to quit an app or restart.
+
+| Scope | Definition | Findings |
+| --- | --- | --- |
+| **Native** | A macOS/Apple-owned subsystem, setting, tool, or data store creates or manages the condition | `memory.pressure`, `memory.swap`, `memory.compressor`, `cpu.load`, `cpu.thermal`, `cpu.low-power-mode`, `cpu.uptime`, `storage.disk-space`, `storage.xcode-*`, `storage.simulators`, `storage.ios-backups`, `storage.trash`, `storage.protected-apps`, `storage.local-snapshots` |
+| **Third-party** | The condition or artifact belongs to non-Apple software | `cpu.launch-items`, `storage.homebrew`, `storage.docker` |
+| **Mixed** | The condition depends on which app you run, or a native location holds third-party data | `memory.top-process`, `cpu.top-process`, `storage.app-caches` |
+| **User data** | The condition is your own files rather than a vendor's software | `storage.large-files` |
+
+The [optimization guide](./optimizations) explains the **what, why, and how** of every finding, including where the native/third-party line falls for caches, launch items, and developer artifacts.
+
 ## Memory
 
 Memory pressure is computed as:
@@ -222,11 +235,24 @@ Severity for directory findings is **medium** at the report threshold, **high** 
 
 **Fixes:** list them, then ask macOS to thin them with `sudo tmutil thinlocalsnapshots / 20000000000 4`. Run a Time Machine backup first if the last one is old; snapshots are part of the safety net.
 
+### `storage.protected-apps`
+
+| | |
+| --- | --- |
+| Trigger | Protected bundles in `/System/Applications`, `/System/Applications/Utilities`, or `/Applications` with the `restricted` flag, totaling ≥ 500 MB |
+| Severity | Informational |
+| Reclaimable | — (not removable by uninstalling) |
+| Evidence | Count, total size, largest app, up to eight apps with size and protection kind |
+
+**Why it matters:** these bundles are owned by macOS or carry the `restricted` file flag. System Integrity Protection prevents deleting or modifying them, and macOS may relaunch required system apps automatically. They can occupy meaningful space, but that space is not recoverable by uninstalling. Listing them prevents protected apps from being mistaken for cleanup targets.
+
+**Fixes:** leave the bundles in place. Review the app's user data in `~/Library/Containers`, `~/Library/Group Containers`, and `~/Library/Application Support`, and use the app's own settings for downloads or caches. Do not disable SIP to remove a system app.
+
 ## What is intentionally not reported
 
 - **"RAM in use" without pressure context.** Cached memory is healthy; reporting it as a problem would be misleading.
 - **Every process above a trivial CPU threshold.** The finding is capped to a leader and a top-five list.
-- **Filesystem noise.** `/System`, `/private`, and other protected or volatile locations are not suggested for deletion.
+- **Filesystem noise.** `/System`, `/private`, and other protected or volatile locations are not suggested for deletion. Protected app bundles are listed for visibility only, not as reclaimable space.
 - **Apple system services.** `com.apple.*` launch items are excluded.
 - **Third-party cleaner categories** such as "junk files" without a specific, reviewable location.
 

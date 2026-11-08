@@ -67,6 +67,7 @@ swift run Optimizr
 
 - [Product overview](docs-site/docs/product/overview.md)
 - [Findings catalog](docs-site/docs/product/findings-catalog.md)
+- [Optimization guide](docs-site/docs/product/optimizations.md)
 - [Architecture](docs-site/docs/tech/architecture.md)
 - [Roadmap and changelog](docs-site/docs/roadmap.md)
 

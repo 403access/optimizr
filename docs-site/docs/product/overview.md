@@ -32,6 +32,8 @@ Each finding carries:
 - A **resolution path** with numbered steps, Settings guidance, and copy-ready shell commands where appropriate.
 - **References** to Apple documentation where behavior is system-defined.
 
+The [findings catalog](./findings-catalog) defines every trigger and threshold. The [optimization guide](./optimizations) explains the **what, why, and how** of each fix and separates **native** macOS/Apple issues from **third-party** ones, so it is clear whether to use a macOS control, the vendor's tooling, or your own judgment about files.
+
 ## Report anatomy
 
 The app has three surfaces:
@@ -102,5 +104,6 @@ Commands are displayed in copy-only blocks. This avoids a permission-hungry priv
 - Process CPU percentages come from `ps` and represent lifetime averages, not instantaneous samples. The UI says so.
 - Local Time Machine snapshots cannot be sized reliably through public tooling; the finding reports count and asks macOS to thin them.
 - Launch-item detection lists third-party plists but does not attribute them to a running process.
+- Protected-app detection covers bundles under `/System/Applications` and bundles carrying the `restricted` flag. MDM-managed apps and system extensions are not classified.
 
 See the [roadmap](../roadmap) for planned work.

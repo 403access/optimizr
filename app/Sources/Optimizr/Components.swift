@@ -68,6 +68,25 @@ struct SeverityBadge: View {
     }
 }
 
+struct ScopeBadge: View {
+    let scope: FindingScope
+    var compact = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: scope.systemImage)
+                .font(.system(size: 8.5, weight: .semibold))
+            Text(compact ? scope.shortTitle : scope.title)
+                .font(.system(size: 9.5, weight: .semibold))
+        }
+        .foregroundStyle(scope.color)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .background(Capsule().fill(scope.color.opacity(0.11)))
+        .help(scope.detail)
+    }
+}
+
 struct CategoryPill: View {
     let category: ScanCategory
 
@@ -179,6 +198,7 @@ struct FindingRow: View {
                 if !compact {
                     HStack(spacing: 6) {
                         SeverityBadge(severity: finding.severity)
+                        ScopeBadge(scope: finding.scope)
                         CategoryPill(category: finding.category)
                     }
                     .padding(.top, 1)

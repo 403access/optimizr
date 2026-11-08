@@ -14,6 +14,7 @@ Optimizr is a native macOS utility that audits your Mac across memory, CPU, and 
 <div className="docs-cards">
   <a className="docs-card" href="./product/overview"><strong>Product overview</strong><span>What Optimizr scans, how the health score works, and who it is for.</span></a>
   <a className="docs-card" href="./product/findings-catalog"><strong>Findings catalog</strong><span>Every check, its threshold, evidence, severity, and recommended fix.</span></a>
+  <a className="docs-card" href="./product/optimizations"><strong>Optimization guide</strong><span>What, why, and how for each fix — with native vs third-party scope.</span></a>
   <a className="docs-card" href="./tech/architecture"><strong>Engineering</strong><span>Architecture, scanner engine, data model, build, test, and deployment.</span></a>
   <a className="docs-card" href="./roadmap"><strong>Roadmap & changelog</strong><span>What shipped, what is next, and the decision log behind the product.</span></a>
 </div>
@@ -23,9 +24,9 @@ Optimizr is a native macOS utility that audits your Mac across memory, CPU, and 
 | Area | State |
 | --- | --- |
 | macOS app | Working MVP — SwiftUI, macOS 14+, Apple silicon tested |
-| Scanner coverage | 22 findings across memory, CPU, and storage |
+| Scanner coverage | 23 findings across memory, CPU, and storage |
 | Automation | Read-only scans; no destructive actions |
-| Tests | 23 unit tests covering parsers, scoring, and report export |
+| Tests | 25 unit tests covering parsers, scoring, and report export |
 | Documentation | This Docusaurus site |
 | Marketing site | Static site deployed alongside these docs |
 | Deployment | GitHub Pages via GitHub Actions |
@@ -57,6 +58,7 @@ All common tasks are available through `./scripts/optimizr help`.
 - [Build and run details](./tech/build-and-run)
 - [Read the net-new roadmap](./roadmap)
 - [Browse all findings](./product/findings-catalog)
+- [Understand each optimization](./product/optimizations)
 
 ## Principles
 

@@ -11,7 +11,7 @@ sidebar_position: 5
 ./scripts/optimizr test
 ```
 
-The current suite has **23 tests** in two groups. They run in about a second because they exercise pure functions; they do not need special permissions, network access, or a particular machine state.
+The current suite has **25 tests** in two groups. They run in about a second because they exercise pure functions; they do not need special permissions, network access, or a particular machine state.
 
 ## What is covered
 

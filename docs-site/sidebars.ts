@@ -10,6 +10,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'product/overview',
         'product/findings-catalog',
+        'product/optimizations',
         'product/safety-and-privacy',
         'product/faq',
       ],

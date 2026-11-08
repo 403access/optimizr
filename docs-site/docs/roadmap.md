@@ -41,11 +41,11 @@ Make Mac performance **legible, actionable, and safe**. A user should be able to
 
 The current release is a **read-only auditor** with broad coverage and an opinionated report:
 
-- 22 findings across three categories.
+- 23 findings across three categories.
 - Stable IDs, severity thresholds, evidence, references, and remediation steps.
 - Category and free-text filtering; detail pane with Reveal in Finder and copyable commands.
 - Markdown export from the app; JSON and Markdown from the CLI.
-- 23 unit tests.
+- 25 unit tests.
 - One Pages artifact containing docs and marketing, deployed by GitHub Actions.
 
 ## Next (v0.2)
@@ -90,6 +90,8 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 | 2026-11-08 | Deployment | Docs and marketing live on GitHub Pages | [`0d0e195`](https://github.com/403access/optimizr/commit/0d0e195) |
 | 2026-11-08 | Release | v0.1.0 app zip, checksum, and release notes | tag [`v0.1.0`](https://github.com/403access/optimizr/releases/tag/v0.1.0) |
 | 2026-11-08 | Tooling | Install helper and task runner for common workflows | [`75f4c60`](https://github.com/403access/optimizr/commit/75f4c60) |
+| 2026-11-08 | Docs | Optimization guide with what/why/how and native vs third-party scope | — |
+| 2026-11-08 | App | Finding scope in the UI, CLI, and export; protected-apps finding | — |
 
 ### #foundation — Project foundation
 
@@ -209,6 +211,37 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 **Validation:** `scripts/optimizr install` built and installed `/Applications/Optimizr.app` (PID confirmed, `codesign --verify` passed), `./scripts/optimizr scan` produced a valid report, and every script passed `bash -n`.
 
 **Docs:** [Build & run](tech/build-and-run#task-runner).
+
+### #optimization-guide — Optimization guide and native/third-party scope
+
+**Why:** The findings catalog documents triggers and thresholds, but "what is this, why does it matter, and who owns the fix?" was spread across short entries. Users also could not tell which problems come from macOS and which come from third-party software, even though the correct fix differs.
+
+**What:**
+
+- New [optimization guide](product/optimizations) with a what/why/how entry for every finding.
+- Three scopes: **native** (Apple-owned condition and fix), **third-party** (non-Apple software or artifacts), and **mixed** (native measurement of an app-dependent workload or user-owned data).
+- An at-a-glance classification table, plus a per-finding "Class / Fix owner" line and an explicit boundary note.
+- The findings catalog now links to the guide and carries the same scope table.
+
+**Validation:** Internal links resolve under the Docusaurus base path; class assignments match the scanner criteria in `Scanners.swift` (for example, launch items exclude `com.apple.*` and app caches are measured natively but hold third-party data).
+
+**Docs:** [Optimization guide](product/optimizations), [Findings catalog](product/findings-catalog#native-vs-third-party-scope).
+
+### #finding-scope — Scope in the app and protected-app visibility
+
+**Why:** The native/third-party distinction existed only in the docs. In the app, a user still had to infer ownership from prose, and there was no way to tell which large app bundles are protected by macOS and therefore not recoverable by uninstalling.
+
+**What:**
+
+- `Finding` now carries `FindingScope` (`native`, `thirdParty`, `mixed`, `userData`), assigned explicitly for every finding.
+- The app shows a scope badge in finding rows and the detail header, a scope filter next to the severity filter, and a scope breakdown on the overview.
+- The Markdown export and CLI summary include the scope; JSON includes it automatically through `Codable`.
+- New `storage.protected-apps` finding lists SIP-protected or `restricted` app bundles with sizes. It is informational and carries no reclaimable bytes because the bundles cannot be uninstalled.
+- `AppInventory` resolves symlinks, checks the restricted flag with one `ls -ldO`, and measures only protected bundles with one multi-path `du -sk`.
+
+**Validation:** `swift build` and `swift test` (25 passing); a live scan reported 66 protected apps totaling 704 MB and emitted the scope on every finding.
+
+**Docs:** [Data model](tech/data-model#scope), [Scanner engine](tech/scanner-engine#protected-apps), [Findings catalog](product/findings-catalog#storageprotected-apps), [Optimization guide](product/optimizations#storageprotected-apps--protected-apps-you-cannot-uninstall).
 
 ## Decision log
 

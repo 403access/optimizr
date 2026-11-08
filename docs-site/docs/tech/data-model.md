@@ -13,6 +13,7 @@ The model lives in `app/Sources/OptimizrCore/Models.swift`. Everything is `Codab
 | --- | --- |
 | `ScanCategory` | `memory`, `cpu`, `storage`; title, tagline, SF Symbol |
 | `Severity` | `info`, `low`, `medium`, `high`, `critical`; ordered, with score penalty |
+| `FindingScope` | `native`, `thirdParty`, `mixed`, `userData`; ownership of the condition |
 | `Metric` | A labeled evidence value, optionally primary |
 | `Reference` | A titled external URL |
 | `RemediationStep` | A numbered action with detail, kind, and optional command |
@@ -30,6 +31,7 @@ public struct Finding: Identifiable, Codable, Sendable, Hashable {
     public let summary: String
     public let detail: String
     public let severity: Severity
+    public let scope: FindingScope
     public let reclaimableBytes: Int64?
     public let metrics: [Metric]
     public let remediation: [RemediationStep]
@@ -48,12 +50,26 @@ public struct Finding: Identifiable, Codable, Sendable, Hashable {
 | `summary` | One or two sentences explaining the consequence |
 | `detail` | Deeper explanation: mechanism, trade-offs, when it matters |
 | `severity` | Derived from documented thresholds; informational is allowed |
+| `scope` | Who owns the condition: native, third-party, mixed, or user data |
 | `reclaimableBytes` | Only for space findings; nil for memory/CPU and low-disk |
 | `metrics` | Verifiable evidence; the detail view lays these out in a grid |
 | `remediation` | Ordered; each step must be actionable on its own |
 | `references` | Apple documentation or another stable authority |
 | `paths` | Files/directories for Reveal in Finder |
 | `tags` | Search and future filtering |
+
+### Scope
+
+`FindingScope` describes **where the condition lives**, not who runs the fix:
+
+| Case | Meaning |
+| --- | --- |
+| `native` | A macOS/Apple-owned subsystem, setting, tool, or data store creates or manages the condition |
+| `thirdParty` | The condition or artifact belongs to non-Apple software |
+| `mixed` | Depends on which app the user runs, or a native location holding third-party data |
+| `userData` | The user's own files rather than a vendor's software |
+
+The UI shows a scope badge on every finding and offers a scope filter; the Markdown and JSON exports include the same value. A native finding can still require the user to quit an app or restart — the scope describes ownership of the mechanism, not the remedy.
 
 ### Stable IDs
 
@@ -80,6 +96,7 @@ public struct Finding: Identifiable, Codable, Sendable, Hashable {
 | `storage.trash` | Storage |
 | `storage.docker` | Storage |
 | `storage.large-files` | Storage |
+| `storage.protected-apps` | Storage |
 | `storage.local-snapshots` | Storage |
 
 A finding's ID is not tied to its title or threshold. If a threshold changes, keep the ID; if the meaning changes fundamentally, add a new ID.
@@ -186,7 +203,7 @@ report.markdown()
 
 - Generated timestamp, host, OS, health score, and total reclaimable.
 - A per-category summary.
-- Every finding with severity, summary, evidence metrics, numbered remediation, and fenced commands.
+- Every finding with severity, scope, summary, evidence metrics, numbered remediation, and fenced commands.
 - A read-only footer.
 
 The export is intentionally plain: it can be pasted into an issue, a note, or a support ticket without images or proprietary formatting.
@@ -203,6 +220,7 @@ The export is intentionally plain: it can be pasted into an issue, a note, or a 
       "category": "storage",
       "title": "App caches: 10.8 GB",
       "severity": "high",
+      "scope": "mixed",
       "reclaimableBytes": 10830000000,
       "metrics": [
         { "label": "Reclaimable", "value": "10.8 GB", "isPrimary": true }
