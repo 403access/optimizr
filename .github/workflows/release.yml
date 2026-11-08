@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to publish (for example v0.1.0)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Package macOS app
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Test
+        run: swift test --package-path app
+
+      - name: Build app bundle
+        run: ./scripts/build-app.sh
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          ZIP="Optimizr-${{ steps.version.outputs.value }}-macos.zip"
+          ditto -c -k --sequesterRsrc --keepParent dist/Optimizr.app "$ZIP"
+          shasum -a 256 "$ZIP" > "$ZIP.sha256"
+          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.value }}
+          name: Optimizr ${{ steps.version.outputs.value }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            Native macOS build of Optimizr.
+
+            **Requirements:** macOS 14 or newer.
+
+            The app is ad-hoc signed, not notarized by Apple. On first launch,
+            right-click **Optimizr.app** and choose **Open**, or build from source.
+
+            Optimizr is read-only: it never deletes files, terminates processes,
+            or changes settings. Review remediation commands before running them.
+          files: |
+            Optimizr-*.zip
+            Optimizr-*.zip.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

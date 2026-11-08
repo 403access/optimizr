@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    name: Build, test, and smoke-scan
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Build
+        run: swift build --package-path app
+
+      - name: Test
+        run: swift test --package-path app
+
+      - name: Headless smoke test
+        run: swift run --package-path app optimizr-scan --json > /tmp/optimizr-report.json && python3 -m json.tool /tmp/optimizr-report.json > /dev/null
+
+      - name: Assemble app bundle
+        run: ./scripts/build-app.sh
+
+      - name: Upload app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Optimizr-app
+          path: dist/Optimizr.app
+          if-no-files-found: error
+          retention-days: 7
+
+  docs:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install docs dependencies
+        working-directory: docs-site
+        run: bun install --frozen-lockfile
+
+      - name: Build docs
+        working-directory: docs-site
+        run: bun run build
