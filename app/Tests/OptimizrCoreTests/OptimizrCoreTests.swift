@@ -170,6 +170,108 @@ final class ParserTests: XCTestCase {
     }
 }
 
+final class AlternativeTests: XCTestCase {
+    private func app(
+        name: String,
+        bundleID: String?,
+        memory: Int64,
+        cpu: Double
+    ) -> RunningApplication {
+        RunningApplication(
+            name: name,
+            bundleIdentifier: bundleID,
+            path: bundleID == nil ? nil : "/Applications/\(name).app",
+            memoryBytes: memory,
+            cpuPercent: cpu,
+            processCount: 2
+        )
+    }
+
+    func testExtractsAppBundlePath() {
+        XCTAssertEqual(
+            RunningApplicationInventory.appBundlePath(from: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+            "/Applications/Google Chrome.app"
+        )
+        XCTAssertEqual(
+            RunningApplicationInventory.appBundlePath(from: "/Applications/Example.app/Contents/Frameworks/Helper.app/Contents/MacOS/Helper"),
+            "/Applications/Example.app"
+        )
+        XCTAssertNil(RunningApplicationInventory.appBundlePath(from: "/usr/sbin/syslogd"))
+    }
+
+    func testGroupsProcessesIntoOneApp() {
+        let samples = [
+            ProcessSample(pid: 1, name: "/Applications/Example.app/Contents/MacOS/Example", cpuPercent: 10, memoryBytes: 2_000_000_000),
+            ProcessSample(pid: 2, name: "/Applications/Example.app/Contents/Frameworks/Helper.app/Contents/MacOS/Helper", cpuPercent: 5, memoryBytes: 1_000_000_000)
+        ]
+        let apps = RunningApplicationInventory.runningApplications(from: samples)
+        XCTAssertEqual(apps.count, 1)
+        XCTAssertEqual(apps[0].processCount, 2)
+        XCTAssertEqual(apps[0].memoryBytes, 3_000_000_000)
+        XCTAssertEqual(apps[0].cpuPercent, 15)
+    }
+
+    func testMatchesCatalogByBundleIdentifier() {
+        let chrome = app(name: "Google Chrome", bundleID: "com.google.Chrome", memory: 4_000_000_000, cpu: 20)
+        let entry = AlternativeCatalog.entries.first { $0.id == "safari-instead-of-chromium" }
+        XCTAssertNotNil(entry)
+        XCTAssertTrue(entry?.matches(chrome) ?? false)
+    }
+
+    func testEvaluatorEmitsEstimatedMemoryGain() {
+        let chrome = app(name: "Google Chrome", bundleID: "com.google.Chrome", memory: 8_000_000_000, cpu: 40)
+        let findings = AlternativeEvaluator.findings(
+            applications: [chrome],
+            totalMemory: 16_000_000_000
+        )
+        XCTAssertEqual(findings.count, 1)
+        let finding = findings[0]
+        XCTAssertEqual(finding.category, .memory)
+        XCTAssertEqual(finding.scope, .mixed)
+        XCTAssertNil(finding.reclaimableBytes)
+        XCTAssertTrue(finding.title.contains("could free"))
+        XCTAssertTrue(finding.metrics.contains { $0.label == "Potential memory gain" })
+        XCTAssertTrue(finding.metrics.contains { $0.label == "Alternative" && $0.value == "Safari" })
+    }
+
+    func testEvaluatorUsesCPUCategoryForCPUHeavyService() {
+        let docker = app(name: "Docker Desktop", bundleID: "com.docker.docker", memory: 100_000_000, cpu: 220)
+        let findings = AlternativeEvaluator.findings(
+            applications: [docker],
+            totalMemory: 16_000_000_000
+        )
+        XCTAssertEqual(findings.count, 1)
+        XCTAssertEqual(findings[0].category, .cpu)
+        XCTAssertTrue(findings[0].title.contains("less CPU"))
+    }
+
+    func testEvaluatorSkipsSmallFootprints() {
+        let chrome = app(name: "Google Chrome", bundleID: "com.google.Chrome", memory: 400_000_000, cpu: 4)
+        let findings = AlternativeEvaluator.findings(
+            applications: [chrome],
+            totalMemory: 16_000_000_000
+        )
+        XCTAssertTrue(findings.isEmpty)
+    }
+
+    func testEvaluatorDoesNotDuplicateAppAndService() {
+        let app = self.app(name: "Google Chrome", bundleID: "com.google.Chrome", memory: 8_000_000_000, cpu: 40)
+        let service = RunningApplication(
+            name: "Google Chrome",
+            bundleIdentifier: nil,
+            path: nil,
+            memoryBytes: 500_000_000,
+            cpuPercent: 5,
+            processCount: 1
+        )
+        let findings = AlternativeEvaluator.findings(
+            applications: [app, service],
+            totalMemory: 16_000_000_000
+        )
+        XCTAssertEqual(findings.count, 1)
+    }
+}
+
 final class ModelTests: XCTestCase {
     private func finding(
         id: String,

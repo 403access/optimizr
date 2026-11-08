@@ -30,6 +30,8 @@ Findings are classified by **where the condition lives**, not by who performs th
 | **Mixed** | The condition depends on which app you run, or a native location holds third-party data | `memory.top-process`, `cpu.top-process`, `storage.app-caches` |
 | **User data** | The condition is your own files rather than a vendor's software | `storage.large-files` |
 
+Alternative findings (`memory.alternative.*` and `cpu.alternative.*`) are always `mixed`: the condition depends on the app or service you run, and the fix is your choice of tool.
+
 The [optimization guide](./optimizations) explains the **what, why, and how** of every finding, including where the native/third-party line falls for caches, launch items, and developer artifacts.
 
 ## Memory
@@ -247,6 +249,24 @@ Severity for directory findings is **medium** at the report threshold, **high** 
 **Why it matters:** these bundles are owned by macOS or carry the `restricted` file flag. System Integrity Protection prevents deleting or modifying them, and macOS may relaunch required system apps automatically. They can occupy meaningful space, but that space is not recoverable by uninstalling. Listing them prevents protected apps from being mistaken for cleanup targets.
 
 **Fixes:** leave the bundles in place. Review the app's user data in `~/Library/Containers`, `~/Library/Group Containers`, and `~/Library/Application Support`, and use the app's own settings for downloads or caches. Do not disable SIP to remove a system app.
+
+## App and service alternatives
+
+Alternative findings are contextual: they appear only when a running app or service matches the [alternatives catalog](./alternatives) and the measured footprint makes the estimated gain meaningful.
+
+| | |
+| --- | --- |
+| Trigger | A running app/service matches `AlternativeCatalog` **and** estimated memory gain is at least the larger of 250 MB or 2% of RAM, **or** estimated CPU gain is at least 15 points |
+| Severity | Low · medium at estimated memory gain ≥ 1.5 GB or CPU gain ≥ 80 points |
+| Reclaimable | — (memory/CPU gain, not disk space) |
+| Evidence | Current memory and CPU, alternative, estimated memory/CPU gain ranges, process count, confidence |
+| IDs | `memory.alternative.<entry>.<app>` for memory-led findings · `cpu.alternative.<entry>.<app>` for CPU-led findings |
+
+**Why it matters:** the most effective optimization is sometimes a different tool, not a cleanup. The finding quantifies the opportunity using the footprint Optimizr already measured and a conservative expected difference.
+
+**Fixes:** try the alternative under the same workload, compare memory and CPU in Activity Monitor, and keep the current app until the alternative covers your extensions, files, and collaboration needs. Optimizr never installs or removes anything.
+
+**Safety notes:** the ranges are heuristics, not benchmarks. `ps` CPU is a lifetime average. Feature differences (extensions, shared links, Kubernetes, guest architecture) can matter more than the estimated gain.
 
 ## What is intentionally not reported
 

@@ -11,6 +11,7 @@ const sidebars: SidebarsConfig = {
         'product/overview',
         'product/findings-catalog',
         'product/optimizations',
+        'product/alternatives',
         'product/safety-and-privacy',
         'product/faq',
       ],

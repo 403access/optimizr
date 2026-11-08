@@ -23,6 +23,8 @@ Optimizr runs a read-only audit in three categories:
 | **CPU** | Is work queueing? Is the chip throttling? What starts itself? | Load above core count, a runaway helper, thermal limit, 36 launch agents |
 | **Storage** | Where did the space go, and what is safe to reclaim? | 97% full disk, 11 GB of caches, old simulators, multi-gigabyte installers |
 
+It also suggests **app and service alternatives** when a running app has a well-established lighter replacement, with estimated memory and CPU gains. Those findings are optional and never install or remove anything.
+
 Each finding carries:
 
 - A **stable ID** so the same issue can be tracked across scans.

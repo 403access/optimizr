@@ -101,6 +101,15 @@ The UI shows a scope badge on every finding and offers a scope filter; the Markd
 
 A finding's ID is not tied to its title or threshold. If a threshold changes, keep the ID; if the meaning changes fundamentally, add a new ID.
 
+Alternative findings use a dynamic but stable pattern:
+
+```text
+memory.alternative.<entry-id>.<app-or-bundle-slug>
+cpu.alternative.<entry-id>.<app-or-bundle-slug>
+```
+
+The entry ID comes from the catalog and the app slug from the bundle identifier or service name. No PID or timestamp is included, and the finding is always `scope: mixed`.
+
 ## Remediation
 
 ```swift

@@ -41,11 +41,11 @@ Make Mac performance **legible, actionable, and safe**. A user should be able to
 
 The current release is a **read-only auditor** with broad coverage and an opinionated report:
 
-- 23 findings across three categories.
+- 23 built-in checks plus contextual app-alternative findings across three categories.
 - Stable IDs, severity thresholds, evidence, references, and remediation steps.
 - Category and free-text filtering; detail pane with Reveal in Finder and copyable commands.
 - Markdown export from the app; JSON and Markdown from the CLI.
-- 25 unit tests.
+- 32 unit tests.
 - One Pages artifact containing docs and marketing, deployed by GitHub Actions.
 
 ## Next (v0.2)
@@ -92,6 +92,7 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 | 2026-11-08 | Tooling | Install helper and task runner for common workflows | [`75f4c60`](https://github.com/403access/optimizr/commit/75f4c60) |
 | 2026-11-08 | Docs | Optimization guide with what/why/how and native vs third-party scope | — |
 | 2026-11-08 | App | Finding scope in the UI, CLI, and export; protected-apps finding | — |
+| 2026-11-08 | App | App/service alternatives with estimated resource gains | — |
 
 ### #foundation — Project foundation
 
@@ -242,6 +243,22 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 **Validation:** `swift build` and `swift test` (25 passing); a live scan reported 66 protected apps totaling 704 MB and emitted the scope on every finding.
 
 **Docs:** [Data model](tech/data-model#scope), [Scanner engine](tech/scanner-engine#protected-apps), [Findings catalog](product/findings-catalog#storageprotected-apps), [Optimization guide](product/optimizations#storageprotected-apps--protected-apps-you-cannot-uninstall).
+
+### #alternatives — App and service alternatives
+
+**Why:** Some of the biggest resource wins are not cleanups but tool choices. A Chromium browser, an Electron editor, Docker Desktop, or a third-party sync client can dominate memory and CPU, yet the user has no evidence-based way to see whether a lighter option is worth trying.
+
+**What:**
+
+- `RunningApplicationInventory` groups `ps` samples into app bundles (via `.app` paths and `Contents/Info.plist`) and services (via executable names).
+- `AlternativeCatalog` is a small, conservative data catalog of known replacements: Chromium/Firefox → Safari, VS Code/Cursor → Zed, Docker Desktop → OrbStack, VirtualBox → UTM, and cloud-sync clients → iCloud Drive.
+- `AlternativeEvaluator` is pure and testable. It applies memory/CPU savings ranges to the measured footprint and emits a finding only when the estimated gain is at least the larger of 250 MB or 2% of RAM, or at least 15 CPU points.
+- Findings are `low` or `medium` severity, always `mixed` scope, carry no reclaimable bytes, and include current usage, estimated gain ranges, process count, confidence, caveats, and migration steps.
+- No install, removal, or automatic switch happens. The user tests the alternative and keeps the current app until it covers their workflow.
+
+**Validation:** `swift build` and `swift test` (32 passing); a live scan on a running Chrome instance emitted `memory.alternative.safari-instead-of-chromium.com-google-chrome` with a 0.7–1.3 GB estimated memory gain and a 5–11% CPU gain.
+
+**Docs:** [App & service alternatives](product/alternatives), [Findings catalog](product/findings-catalog#app-and-service-alternatives), [Optimization guide](product/optimizations#app-and-service-alternatives), [Scanner engine](tech/scanner-engine#app-and-service-alternatives).
 
 ## Decision log
 

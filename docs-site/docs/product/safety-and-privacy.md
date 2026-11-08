@@ -16,6 +16,7 @@ Optimizr asks for less trust than a typical cleaner, and it tries to earn that w
 | Read launch-agent plists | Load, unload, enable, or disable services |
 | Measure directory sizes with `du` | Empty the Trash or caches |
 | List Time Machine snapshots | Delete or thin snapshots |
+| Suggest a lighter app or service alternative | Install, remove, or switch apps |
 | Write a report only when you export it | Upload anything, anywhere |
 
 There is no "optimize" button because there is no mutation path. The only file the app writes is the Markdown report you explicitly save.

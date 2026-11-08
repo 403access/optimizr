@@ -161,6 +161,18 @@ The measurement code uses `DispatchQueue.concurrentPerform` and guards the resul
 
 Output is parsed as `size|path` and sorted. The finding reports the total, the count, and up to eight files. The scan is bounded by a 12-second timeout. A file named with a newline is an accepted edge case; the parser skips malformed lines.
 
+### App and service alternatives
+
+`AlternativesScanner` runs its own `ps` snapshot and groups processes with `RunningApplicationInventory`:
+
+- A process whose command contains `.app/` is grouped under its outer app bundle.
+- `Contents/Info.plist` supplies the bundle identifier and display name.
+- Processes without a bundle are grouped by executable name as services.
+
+`AlternativeEvaluator` is pure and testable. It matches apps/services against `AlternativeCatalog.entries`, applies conservative savings ranges to the measured footprint, and emits findings only above the documented threshold. The estimate is never presented as a benchmark, and `reclaimableBytes` stays nil because the gain is memory/CPU, not disk.
+
+The catalog is data: add an `AlternativeEntry` and a test rather than changing the evaluator. Full product rules are in [App & service alternatives](../product/alternatives).
+
 ### Protected apps
 
 `AppInventory.protectedApps(runner:)` lists bundles that the user cannot remove:

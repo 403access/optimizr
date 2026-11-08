@@ -1256,6 +1256,32 @@ public struct StorageScanner: OptimizrScanner {
     }
 }
 
+// MARK: - Alternatives
+
+/// Suggests more efficient replacements for running apps and services when a
+/// known alternative exists and the measured footprint makes the gain
+/// meaningful. Estimates are deliberately conservative and optional.
+public struct AlternativesScanner: OptimizrScanner {
+    public let category: ScanCategory = .memory
+    private let runner: any CommandRunning
+
+    public init(runner: any CommandRunning = ShellCommandRunner()) {
+        self.runner = runner
+    }
+
+    public func scan() -> [Finding] {
+        let psOutput = runner.run("/bin/ps", arguments: ["-axo", "pid=,rss=,pcpu=,comm="], timeout: 8)
+        let samples = ProcessSampleParser.parse(psOutput.stdout)
+        guard !samples.isEmpty else { return [] }
+
+        let applications = RunningApplicationInventory.runningApplications(from: samples)
+        return AlternativeEvaluator.findings(
+            applications: applications,
+            totalMemory: Int64(ProcessInfo.processInfo.physicalMemory)
+        )
+    }
+}
+
 // MARK: - Engine
 
 public struct ScanEngine: Sendable {
@@ -1263,7 +1289,7 @@ public struct ScanEngine: Sendable {
     private let runner: any CommandRunning
 
     public init(
-        scanners: [any OptimizrScanner] = [MemoryScanner(), CPUScanner(), StorageScanner()],
+        scanners: [any OptimizrScanner] = [MemoryScanner(), CPUScanner(), StorageScanner(), AlternativesScanner()],
         runner: any CommandRunning = ShellCommandRunner()
     ) {
         self.scanners = scanners

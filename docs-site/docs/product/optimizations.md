@@ -421,6 +421,26 @@ Storage findings are where the native/third-party line matters most. Optimizr se
 
 **Boundary.** Native. Do not delete snapshots manually; thinning lets APFS reclaim space without breaking the backup chain.
 
+## App and service alternatives
+
+Not every optimization is a cleanup. Sometimes the better move is to run a more efficient tool.
+
+### `memory.alternative.*` / `cpu.alternative.*` — A lighter alternative exists
+
+**Class:** Mixed (app-dependent) · **Fix owner:** You · **Reclaimable:** none (memory/CPU gain, not disk)
+
+**What.** Optimizr groups running processes into app bundles and services, then matches them against a small catalog of known alternatives. It applies a conservative savings range to the measured footprint and only emits a finding when the gain is meaningful: at least the larger of 250 MB or 2% of RAM, or at least 15 CPU points.
+
+**Why.** A more efficient app can recover memory and CPU without deleting anything. Examples include a native browser instead of a Chromium browser, a native editor instead of an Electron editor, OrbStack instead of Docker Desktop, UTM instead of VirtualBox, and iCloud Drive instead of a third-party sync client. The full catalog and ranges are documented in [App & service alternatives](./alternatives).
+
+**How.**
+1. Read the rationale and caveat; feature differences can matter more than the estimated gain.
+2. Try the alternative with the same tabs, project, containers, or files.
+3. Compare memory and CPU in Activity Monitor.
+4. Keep the current app until the alternative covers your extensions and workflows.
+
+**Boundary.** Mixed: the condition is the app you chose to run, not macOS itself. The estimate is a range, not a benchmark, and the app is never removed automatically. `ps` CPU percentages are lifetime averages, so treat CPU estimates as directional.
+
 ## Choosing what to fix first
 
 Use the class labels to decide where to spend effort:
@@ -429,5 +449,6 @@ Use the class labels to decide where to spend effort:
 2. **Native storage findings** (Xcode, simulators, snapshots, Trash) recover the most space, but carry data-loss trade-offs. Read the safety note for each.
 3. **Native memory/CPU findings** are symptoms of workload. Quitting apps and restarting resolves several at once; no cleaner can do it for you.
 4. **Protected-app findings** are context, not a cleanup target. Do not disable SIP or force-delete system bundles; review their user data instead.
+5. **Alternative findings** are optional switches. Test the alternative under the same workload and keep it only if it is actually better for you.
 
 The app sorts by severity and then by reclaimable bytes, so the top of the report is already a reasonable order. The class label tells you whether the next step is a vendor command, a macOS setting, or a decision about your own data.
