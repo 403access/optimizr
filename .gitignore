@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Swift / Xcode
+app/.build/
+app/.swiftpm/
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+dist/
+
+# JavaScript / Node
+node_modules/
+.bun/
+.npm/
+docs-site/.docusaurus/
+docs-site/build/
+docs-site/.cache-loader/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+site/
