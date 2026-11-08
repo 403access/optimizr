@@ -2,6 +2,8 @@
 
 **Find the drag. Fix the Mac.**
 
+[Download for macOS](https://github.com/403access/optimizr/releases/latest) · MIT licensed · macOS 14+
+
 Optimizr is a native macOS app that audits your Mac across three dimensions — **memory, CPU, and storage** — and turns the raw numbers into a prioritized list of concrete optimizations. Every finding explains what is happening, why it matters, how much space or performance it can recover, and the exact steps to resolve it.
 
 > Status: v0.1.0 MVP. **Docs:** https://403access.github.io/optimizr/docs/ · **Site:** https://403access.github.io/optimizr/  

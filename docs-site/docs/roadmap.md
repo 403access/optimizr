@@ -29,6 +29,7 @@ Make Mac performance **legible, actionable, and safe**. A user should be able to
 | Docusaurus documentation | ✅ Shipped | v0.1.0 |
 | Marketing site | ✅ Shipped | v0.1.0 |
 | GitHub Pages deployment | ✅ Shipped | v0.1.0 |
+| Public v0.1.0 app release | ✅ Shipped | v0.1.0 |
 | Scan history and trends | 🟡 Next | v0.2.0 |
 | Menu-bar mode and scheduled scans | 🟡 Next | v0.2.0 |
 | Notarized, signed distribution | 🟡 Next | v0.2.0 |
@@ -85,7 +86,8 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 | 2026-11-08 | Marketing | Static marketing site | [`09891a8`](https://github.com/403access/optimizr/commit/09891a8) |
 | 2026-11-08 | CI/CD | GitHub Actions CI, Pages deploy, release packaging | [`ee69015`](https://github.com/403access/optimizr/commit/ee69015) |
 | 2026-11-08 | CI fix | npm lockfile, manifest fix, pinned toolchain | [`3f4e4e9`](https://github.com/403access/optimizr/commit/3f4e4e9) |
-| 2026-11-08 | Deployment | Docs and marketing live on GitHub Pages | _this commit_ |
+| 2026-11-08 | Deployment | Docs and marketing live on GitHub Pages | [`0d0e195`](https://github.com/403access/optimizr/commit/0d0e195) |
+| 2026-11-08 | Release | v0.1.0 app zip, checksum, and release notes | tag [`v0.1.0`](https://github.com/403access/optimizr/releases/tag/v0.1.0) |
 
 ### #foundation — Project foundation
 
@@ -176,6 +178,19 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 - Desktop and 390 px mobile screenshots were rendered from the live URLs.
 
 **Docs:** [Deployment](tech/deployment).
+
+### #release-v010 — v0.1.0 release
+
+**Why:** The marketing page promises a download, and a source-only project should still ship a runnable artifact for people who do not want a toolchain.
+
+**What:**
+
+- Tag `v0.1.0` points at the documented `main` commit.
+- The `Release` workflow ran `swift test`, built and ad-hoc signed the app bundle, zipped it with `ditto`, generated a SHA-256 checksum, and published a GitHub Release.
+- Assets: `Optimizr-v0.1.0-macos.zip` (1.2 MB) and `.sha256`.
+- The marketing Download CTA targets `releases/latest`.
+
+**Validation:** release workflow run [`42478335968`](https://github.com/403access/optimizr/actions/runs/42478335968) succeeded; the release is public, non-draft, and both assets return HTTP 200. The zip is ad-hoc signed, not notarized; release notes state this.
 
 ## Decision log
 
