@@ -30,6 +30,7 @@ Make Mac performance **legible, actionable, and safe**. A user should be able to
 | Marketing site | ✅ Shipped | v0.1.0 |
 | GitHub Pages deployment | ✅ Shipped | v0.1.0 |
 | Public v0.1.0 app release | ✅ Shipped | v0.1.0 |
+| Script-based install and task runner | ✅ Shipped | v0.1.0 |
 | Scan history and trends | 🟡 Next | v0.2.0 |
 | Menu-bar mode and scheduled scans | 🟡 Next | v0.2.0 |
 | Notarized, signed distribution | 🟡 Next | v0.2.0 |
@@ -88,6 +89,7 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 | 2026-11-08 | CI fix | npm lockfile, manifest fix, pinned toolchain | [`3f4e4e9`](https://github.com/403access/optimizr/commit/3f4e4e9) |
 | 2026-11-08 | Deployment | Docs and marketing live on GitHub Pages | [`0d0e195`](https://github.com/403access/optimizr/commit/0d0e195) |
 | 2026-11-08 | Release | v0.1.0 app zip, checksum, and release notes | tag [`v0.1.0`](https://github.com/403access/optimizr/releases/tag/v0.1.0) |
+| 2026-11-08 | Tooling | Install helper and task runner for common workflows | [`75f4c60`](https://github.com/403access/optimizr/commit/75f4c60) |
 
 ### #foundation — Project foundation
 
@@ -191,6 +193,22 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 - The marketing Download CTA targets `releases/latest`.
 
 **Validation:** release workflow run [`42478335968`](https://github.com/403access/optimizr/actions/runs/42478335968) succeeded; the release is public, non-draft, and both assets return HTTP 200. The zip is ad-hoc signed, not notarized; release notes state this.
+
+### #developer-scripts — Script-based task runner
+
+**Why:** Repeating the same Swift, install, test, and docs commands invites drift. Installation in particular needs to be one reviewed operation: build, quit the running copy, replace `/Applications/Optimizr.app`, verify the signature, and launch.
+
+**What:**
+
+- `scripts/optimizr` dispatches `install`, `run`, `build`, `test`, `scan`, `docs`, `site`, `icon`, `clean`, and `uninstall`.
+- `install-app.sh` refuses to escalate silently if `/Applications` is not writable; it quits the running app, installs with `ditto`, re-signs if needed, validates `Info.plist`, and launches.
+- `test.sh` can follow the suite with a live read-only scan.
+- `serve-docs.sh` installs npm dependencies on demand; `preview-sites.sh` assembles the exact Pages layout and serves it under `/optimizr/`.
+- `clean.sh` and `uninstall-app.sh` provide explicit teardown paths.
+
+**Validation:** `scripts/optimizr install` built and installed `/Applications/Optimizr.app` (PID confirmed, `codesign --verify` passed), `./scripts/optimizr scan` produced a valid report, and every script passed `bash -n`.
+
+**Docs:** [Build & run](tech/build-and-run#task-runner).
 
 ## Decision log
 

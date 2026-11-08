@@ -177,9 +177,9 @@ To use a custom domain:
 
 ## Deployment checklist
 
-- [ ] `swift test` passes locally.
-- [ ] `swift run optimizr-scan` produces a valid report.
-- [ ] `./scripts/build-app.sh` succeeds.
+- [ ] `./scripts/optimizr test` passes locally.
+- [ ] `./scripts/optimizr scan` produces a valid report.
+- [ ] `./scripts/optimizr build` succeeds.
 - [ ] `cd docs-site && npm run build` succeeds with no broken links.
 - [ ] Marketing links point to existing routes.
 - [ ] Roadmap and changelog updated in the same commit.

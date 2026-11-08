@@ -65,7 +65,7 @@ app/
   Resources/               Info.plist, icon source and .icns
 docs-site/                 Docusaurus product, tech, roadmap
 marketing/                 Static marketing site
-scripts/                   build-app.sh, make-icon.py
+scripts/                   optimizr task runner, build/install/test/docs helpers, icon renderer
 .github/workflows/         CI, Pages deployment, release
 ```
 
@@ -108,7 +108,7 @@ A command failure is a data gap, not a crash. The UI simply shows fewer findings
 
 ## The app bundle
 
-Swift Package Manager builds the executable. `scripts/build-app.sh` assembles:
+Swift Package Manager builds the executable. `scripts/optimizr build` (via `scripts/build-app.sh`) assembles:
 
 ```
 Optimizr.app/

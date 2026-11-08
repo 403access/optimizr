@@ -197,9 +197,8 @@ Parsers return `nil` or an empty array when the output is not recognizable. They
 10. Run:
 
 ```bash
-cd app
-swift test
-swift run optimizr-scan
+./scripts/optimizr test
+./scripts/optimizr scan
 ```
 
 ## Performance budget

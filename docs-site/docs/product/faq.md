@@ -51,7 +51,7 @@ It is a conventional windowed app in the MVP. A menu-bar mode and scheduled scan
 
 ### The app is unsigned / Gatekeeper complains. What do I do?
 
-Local builds are ad-hoc signed by `scripts/build-app.sh`, not notarized with an Apple Developer ID. On first launch, right-click the app and choose Open, or build and run it from source with `swift run`. Do not disable Gatekeeper globally.
+Local builds are ad-hoc signed by `./scripts/optimizr install` or `./scripts/optimizr build`, not notarized with an Apple Developer ID. On first launch, right-click the app and choose Open, or run it from source with `./scripts/optimizr run`. Do not disable Gatekeeper globally.
 
 ### How do I uninstall it?
 

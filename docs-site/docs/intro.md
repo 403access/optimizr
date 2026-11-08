@@ -34,24 +34,25 @@ Optimizr is a native macOS utility that audits your Mac across memory, CPU, and 
 
 Run the app from source:
 
+Install it into Applications and launch:
+
 ```bash
-cd app
-swift run Optimizr
+./scripts/optimizr install
 ```
 
-Or build a signed bundle:
+Or build and run the local bundle without installing:
 
 ```bash
-./scripts/build-app.sh
-open dist/Optimizr.app
+./scripts/optimizr run
 ```
 
 For a headless scan that can be scripted or used in CI:
 
 ```bash
-cd app
-swift run optimizr-scan --json
+./scripts/optimizr scan --json
 ```
+
+All common tasks are available through `./scripts/optimizr help`.
 
 - [Build and run details](./tech/build-and-run)
 - [Read the net-new roadmap](./roadmap)

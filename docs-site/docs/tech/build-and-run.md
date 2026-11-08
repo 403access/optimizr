@@ -16,7 +16,34 @@ sidebar_position: 4
 
 The project is developed with Xcode 27 / Swift 6.4 on Apple silicon, but the package declares macOS 14 and Swift 5 language mode.
 
+## Task runner
+
+Use `scripts/optimizr` instead of spelling out build commands:
+
+| Task | Command |
+| --- | --- |
+| Build + install to `/Applications` + launch | `./scripts/optimizr install` |
+| Install without launching | `./scripts/optimizr install --no-launch` |
+| Build `dist/Optimizr.app` | `./scripts/optimizr build` |
+| Run the local dist build | `./scripts/optimizr run` |
+| Test | `./scripts/optimizr test` |
+| Test then live scan | `./scripts/optimizr test --scan` |
+| Headless scan | `./scripts/optimizr scan` |
+| Docs dev server | `./scripts/optimizr docs` |
+| Combined docs + marketing preview | `./scripts/optimizr site` |
+| Regenerate the icon | `./scripts/optimizr icon` |
+| Clean build output | `./scripts/optimizr clean` |
+| Remove the `/Applications` copy | `./scripts/optimizr uninstall` |
+
+`./scripts/optimizr help` lists the options. Each command delegates to a focused script in `scripts/`, which can be invoked directly.
+
 ## Run the app
+
+```bash
+./scripts/optimizr run
+```
+
+Or, for a raw SwiftPM run without packaging:
 
 ```bash
 cd app
@@ -25,10 +52,24 @@ swift run Optimizr
 
 The first build resolves no external dependencies, so it is fast. A window opens and starts a scan automatically.
 
+## Install to Applications
+
+```bash
+./scripts/optimizr install
+```
+
+`install-app.sh` builds the bundle, quits any running copy, copies it to `/Applications/Optimizr.app`, verifies the code signature, and launches it. If `/Applications` is not writable, it stops with a clear message instead of silently escalating.
+
+```bash
+./scripts/optimizr install --no-launch
+./scripts/optimizr install --skip-build
+./scripts/optimizr uninstall
+```
+
 ## Build an app bundle
 
 ```bash
-./scripts/build-app.sh
+./scripts/optimizr build
 open dist/Optimizr.app
 ```
 
@@ -42,7 +83,7 @@ open dist/Optimizr.app
 Use a different configuration if needed:
 
 ```bash
-CONFIGURATION=debug ./scripts/build-app.sh
+CONFIGURATION=debug ./scripts/optimizr build
 ```
 
 ### Why ad-hoc signing?
@@ -52,10 +93,9 @@ There is no Apple Developer ID in the build environment, so the bundle is signed
 ## Headless CLI
 
 ```bash
-cd app
-swift run optimizr-scan             # human-readable summary
-swift run optimizr-scan --json      # full report as JSON
-swift run optimizr-scan --markdown  # Markdown report
+./scripts/optimizr scan             # human-readable summary
+./scripts/optimizr scan --json      # full report as JSON
+./scripts/optimizr scan --markdown  # Markdown report
 ```
 
 The release binary can be copied anywhere:
@@ -70,10 +110,10 @@ The CLI uses the same `ScanEngine` as the app, so output is consistent.
 ## Run the documentation site
 
 ```bash
-cd docs-site
-npm install
-npm run start        # http://localhost:3100/optimizr/docs/
+./scripts/optimizr docs
 ```
+
+The script installs npm dependencies on first use and starts Docusaurus at `http://localhost:3100/optimizr/docs/`. Force a reinstall with `--install`.
 
 Docusaurus is configured with:
 
@@ -91,30 +131,18 @@ npm run build
 npm run serve
 ```
 
-## Preview the marketing site
+## Preview the combined sites
 
 ```bash
-python3 -m http.server 4173 --directory marketing
+./scripts/optimizr site
 ```
 
-Open `http://localhost:4173/`. The docs link points to `./docs/`, which only exists in the assembled Pages artifact. To preview the combined site locally at the same paths as production:
+This builds Docusaurus, assembles the exact Pages layout under `.preview/optimizr/`, and serves it at production paths:
 
-```bash
-# Build docs
-cd docs-site && npm run build && cd ..
+- `http://localhost:4173/optimizr/`
+- `http://localhost:4173/optimizr/docs/`
 
-# Assemble the same layout the workflow deploys
-rm -rf site && mkdir -p site
-cp -R marketing/. site/
-cp -R docs-site/build site/docs
-touch site/.nojekyll
-
-# Serve it under /optimizr/ because Docusaurus uses baseUrl /optimizr/docs/
-rm -rf .preview && mkdir -p .preview/optimizr
-cp -R site/. .preview/optimizr/
-python3 -m http.server 4173 --directory .preview
-# → http://localhost:4173/optimizr/ and http://localhost:4173/optimizr/docs/
-```
+Use `--port` to change the port and `--no-build` to reuse the current docs build.
 
 If you serve the artifact at `/` instead, the docs HTML will load without its CSS because Docusaurus emits asset URLs under `/optimizr/docs/`.
 
@@ -123,7 +151,7 @@ If you serve the artifact at `/` instead, the docs HTML will load without its CS
 The SVG in `app/Resources/Icon.svg` is the visual source of truth. The deterministic renderer is:
 
 ```bash
-python3 scripts/make-icon.py
+./scripts/optimizr icon
 ```
 
 This writes `app/Resources/AppIcon-1024.png` and `AppIcon.icns` and requires Pillow. It is not part of the normal build; the generated `.icns` is committed so CI does not need Python imaging libraries.
@@ -136,13 +164,15 @@ The build supports:
 | --- | --- | --- |
 | `CONFIGURATION` | `release` | SwiftPM build configuration for `build-app.sh` |
 
+Example: `CONFIGURATION=debug ./scripts/optimizr build`.
+
 There are no runtime secrets and no `.env` file. The app reads no configuration.
 
 ## Troubleshooting
 
 ### `swift build` fails with a target path error
 
-The package expects `Sources/Optimizr`, `Sources/OptimizrCore`, `Sources/OptimizrScan`, and `Tests/OptimizrCoreTests`. Run commands from `app/` or use `--package-path app`.
+The package expects `Sources/Optimizr`, `Sources/OptimizrCore`, `Sources/OptimizrScan`, and `Tests/OptimizrCoreTests`. Use `./scripts/optimizr build` (or pass `--package-path app` to SwiftPM).
 
 ### The app opens but the window is blank
 
@@ -158,7 +188,7 @@ The relevant directory may not exist, may be unreadable, or the command may have
 
 ### Docs build fails on `onBrokenLinks`
 
-The configuration is strict on purpose. Fix the link or update the sidebar. Run `npm run build` locally before pushing.
+The configuration is strict on purpose. Fix the link or update the sidebar. Run `npm run build` in `docs-site/` locally before pushing.
 
 ### Port 3100 is in use
 

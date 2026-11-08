@@ -235,4 +235,4 @@ Severity for directory findings is **medium** at the report threshold, **high** 
 1. Update the constant in `Scanners.swift`.
 2. Update the table on this page and, if behavior changed, the roadmap entry.
 3. Add or update a unit test for the parser or scoring helper if the change is mechanical.
-4. Run `swift test` and a live `optimizr-scan` before committing.
+4. Run `./scripts/optimizr test` and `./scripts/optimizr scan` before committing.

@@ -8,8 +8,7 @@ sidebar_position: 5
 ## Running the suite
 
 ```bash
-cd app
-swift test
+./scripts/optimizr test
 ```
 
 The current suite has **23 tests** in two groups. They run in about a second because they exercise pure functions; they do not need special permissions, network access, or a particular machine state.
@@ -70,9 +69,8 @@ These are candidates for a future test target and are listed on the [roadmap](..
 The headless CLI is the integration check:
 
 ```bash
-cd app
-swift run optimizr-scan
-swift run optimizr-scan --json | python3 -m json.tool > /dev/null
+./scripts/optimizr test --scan
+./scripts/optimizr scan --json | python3 -m json.tool > /dev/null
 ```
 
 On the development Mac, the expected result is a valid report with real findings — not an empty scan. An empty report on a machine that is clearly under pressure is a bug.

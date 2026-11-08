@@ -117,7 +117,7 @@ Read [Scanner engine](./scanner-engine) first. The short version:
 4. Provide remediation steps; mark destructive commands clearly.
 5. Add the finding ID and threshold table to the [catalog](../product/findings-catalog).
 6. Add a parser/threshold test.
-7. Verify with `swift run optimizr-scan` on a real Mac.
+7. Verify with `./scripts/optimizr scan` on a real Mac.
 8. Update the roadmap.
 
 ### Safety review

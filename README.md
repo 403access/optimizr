@@ -24,47 +24,43 @@ Most "cleaner" apps are opaque: they show a scary number and ask for permission 
 app/                  Native macOS app (SwiftUI + Swift Package Manager)
 docs-site/            Product, technical, and roadmap documentation (Docusaurus)
 marketing/            Static marketing site
-scripts/              Build, bundling, and release helpers
+scripts/              Task runner: install, run, test, docs, icon, clean
 .github/workflows/    CI and GitHub Pages deployment
 ```
 
-## Quick start
+## Install
 
-### Run the app from source
+```bash
+./scripts/optimizr install
+```
+
+Builds the app, ad-hoc signs it, copies it to `/Applications/Optimizr.app`, verifies the signature, and launches it. Use `--no-launch` to install only, or `./scripts/optimizr uninstall` to remove it.
+
+## Everyday commands
+
+All common tasks go through one script:
+
+| Task | Command |
+| --- | --- |
+| Install + launch | `./scripts/optimizr install` |
+| Build only | `./scripts/optimizr build` |
+| Run the local dist build | `./scripts/optimizr run` |
+| Run tests | `./scripts/optimizr test` |
+| Tests + live scan | `./scripts/optimizr test --scan` |
+| Headless scan | `./scripts/optimizr scan --markdown` |
+| Docs dev server | `./scripts/optimizr docs` |
+| Combined docs + marketing preview | `./scripts/optimizr site` |
+| Regenerate the icon | `./scripts/optimizr icon` |
+| Clean build output | `./scripts/optimizr clean` |
+| Uninstall | `./scripts/optimizr uninstall` |
+
+Run `./scripts/optimizr help` for options. The focused helpers in `scripts/` can also be called directly.
+
+### Iterate on the UI without a bundle
 
 ```bash
 cd app
 swift run Optimizr
-```
-
-### Build a signed app bundle
-
-```bash
-./scripts/build-app.sh
-open dist/Optimizr.app
-```
-
-### Run a headless scan
-
-```bash
-cd app
-swift run optimizr-scan             # summary
-swift run optimizr-scan --json      # machine-readable
-swift run optimizr-scan --markdown  # shareable report
-```
-
-### Run the documentation site
-
-```bash
-cd docs-site
-npm install
-npm run start
-```
-
-### Preview the marketing site
-
-```bash
-python3 -m http.server 4173 --directory marketing
 ```
 
 ## Documentation
