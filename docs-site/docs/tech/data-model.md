@@ -95,11 +95,16 @@ The UI shows a scope badge on every finding and offers a scope filter; the Markd
 | `storage.ios-backups` | Storage |
 | `storage.trash` | Storage |
 | `storage.docker` | Storage |
+| `storage.dev-node-modules` | Storage |
+| `storage.dev-build-artifacts` | Storage |
+| `storage.dev-package-caches` | Storage |
 | `storage.large-files` | Storage |
 | `storage.protected-apps` | Storage |
 | `storage.local-snapshots` | Storage |
 
 A finding's ID is not tied to its title or threshold. If a threshold changes, keep the ID; if the meaning changes fundamentally, add a new ID.
+
+Developer findings are aggregates, not one finding per folder. `storage.dev-node-modules` covers all JavaScript dependency trees, `storage.dev-build-artifacts` covers rebuildable project output, and `storage.dev-package-caches` covers global package-manager caches. Their evidence is grouped by repository root by default; `ScanOptions.includeNestedDeveloperArtifacts` (the app's “Show nested dev folders” toggle and the CLI's `--deep-dev`) expands the evidence to individual nested projects. Matched artifact folders are pruned during discovery, so a `node_modules` inside another `node_modules` is never counted twice.
 
 Alternative findings use a dynamic but stable pattern:
 

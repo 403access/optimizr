@@ -983,16 +983,42 @@ public struct StorageScanner: OptimizrScanner {
             )
         ]
 
-        let sizes = measureDirectories(targets, homebrew: homebrew)
+        let devCacheEntries = DevCacheCatalog.entries.filter {
+            FileManager.default.fileExists(atPath: $0.url.path)
+        }
+        let measurements = targets.map { MeasurementTarget(id: $0.id, url: $0.url, timeout: 12) }
+            + devCacheEntries.map { MeasurementTarget(id: $0.id, url: $0.url, timeout: 90) }
+        let sizes = measureDirectories(measurements)
+
+        let homebrewTarget = targets.first { $0.id == "storage.homebrew" }
+        let homebrewBytes = sizes["storage.homebrew"] ?? 0
+        let homebrewReported = homebrewTarget.map {
+            ByteMath.severity(
+                for: homebrewBytes,
+                reportThreshold: $0.reportThreshold,
+                highThreshold: $0.highThreshold,
+                criticalThreshold: $0.criticalThreshold
+            ) != nil
+        } ?? false
+
+        let devCacheTotal = devCacheEntries.reduce(Int64(0)) { $0 + (sizes[$1.id] ?? 0) }
+        let devCachesUnderAppCaches = devCacheEntries
+            .filter { $0.url.path.hasPrefix(caches.path + "/") }
+            .reduce(Int64(0)) { $0 + (sizes[$1.id] ?? 0) }
+        let devCachesReported = devCacheTotal >= DevCacheCatalog.reportThreshold
+
         var findings: [Finding] = []
 
         for target in targets {
             guard var bytes = sizes[target.id] else { continue }
 
-            // App caches overlap the Homebrew cache; subtract the dedicated
-            // Homebrew finding so the report's total is not double counted.
+            // App caches overlap Homebrew and the developer caches that live in
+            // ~/Library/Caches. Subtract only caches that are reported by their
+            // own finding, so space never vanishes from the report.
             if target.id == "storage.app-caches" {
-                bytes = max(0, bytes - (sizes["storage.homebrew"] ?? 0))
+                let overlap = (homebrewReported ? homebrewBytes : 0)
+                    + (devCachesReported ? devCachesUnderAppCaches : 0)
+                bytes = max(0, bytes - overlap)
             }
 
             guard let severity = ByteMath.severity(
@@ -1022,10 +1048,20 @@ public struct StorageScanner: OptimizrScanner {
             ))
         }
 
+        if let cacheFinding = DevCacheFindingBuilder.finding(sizes: sizes) {
+            findings.append(cacheFinding)
+        }
+
         return findings
     }
 
-    private func measureDirectories(_ targets: [DirectoryTarget], homebrew: URL) -> [String: Int64] {
+    private struct MeasurementTarget: Sendable {
+        let id: String
+        let url: URL
+        let timeout: TimeInterval
+    }
+
+    private func measureDirectories(_ targets: [MeasurementTarget]) -> [String: Int64] {
         let fileManager = FileManager.default
         let existing = targets.filter { fileManager.fileExists(atPath: $0.url.path) }
         guard !existing.isEmpty else { return [:] }
@@ -1034,13 +1070,27 @@ public struct StorageScanner: OptimizrScanner {
         var sizes: [String: Int64] = [:]
         let runner = self.runner
 
-        DispatchQueue.concurrentPerform(iterations: existing.count) { index in
-            let target = existing[index]
-            let result = runner.run("/usr/bin/du", arguments: ["-sk", target.url.path], timeout: 12)
-            guard let bytes = DuParser.bytes(result.stdout) else { return }
-            lock.lock()
-            sizes[target.id] = bytes
-            lock.unlock()
+        // Measuring large developer caches is metadata-heavy. Running every
+        // target at once thrashes the disk and makes timeouts more likely, so
+        // process a small batch at a time.
+        let batchSize = 4
+        var index = 0
+        while index < existing.count {
+            let end = min(index + batchSize, existing.count)
+            let batch = Array(existing[index..<end])
+            DispatchQueue.concurrentPerform(iterations: batch.count) { offset in
+                let target = batch[offset]
+                let result = runner.run(
+                    "/usr/bin/du",
+                    arguments: ["-sk", target.url.path],
+                    timeout: target.timeout
+                )
+                guard let bytes = DuParser.bytes(result.stdout) else { return }
+                lock.lock()
+                sizes[target.id] = bytes
+                lock.unlock()
+            }
+            index = end
         }
 
         return sizes
@@ -1066,6 +1116,25 @@ public struct StorageScanner: OptimizrScanner {
             "-size", "+1G",
             "-not", "-path", "*/.git/*",
             "-not", "-path", "*/Library/*",
+            "-not", "-path", "*/node_modules/*",
+            "-not", "-path", "*/.venv/*",
+            "-not", "-path", "*/Pods/*",
+            "-not", "-path", "*/.next/*",
+            "-not", "-path", "*/.nuxt/*",
+            "-not", "-path", "*/.svelte-kit/*",
+            "-not", "-path", "*/.turbo/*",
+            "-not", "-path", "*/.parcel-cache/*",
+            "-not", "-path", "*/.build/*",
+            "-not", "-path", "*/build/*",
+            "-not", "-path", "*/target/*",
+            "-not", "-path", "*/.dart_tool/*",
+            "-not", "-path", "*/.expo/*",
+            "-not", "-path", "*/vendor/*",
+            "-not", "-path", "*/_build/*",
+            "-not", "-path", "*/deps/*",
+            "-not", "-path", "*/.zig-cache/*",
+            "-not", "-path", "*/zig-out/*",
+            "-not", "-path", "*/.stack-work/*",
             "-exec", "/usr/bin/stat", "-f", "%z|%N", "{}", "+"
         ])
 
@@ -1289,10 +1358,17 @@ public struct ScanEngine: Sendable {
     private let runner: any CommandRunning
 
     public init(
-        scanners: [any OptimizrScanner] = [MemoryScanner(), CPUScanner(), StorageScanner(), AlternativesScanner()],
-        runner: any CommandRunning = ShellCommandRunner()
+        scanners: [any OptimizrScanner]? = nil,
+        runner: any CommandRunning = ShellCommandRunner(),
+        options: ScanOptions = .standard
     ) {
-        self.scanners = scanners
+        self.scanners = scanners ?? [
+            MemoryScanner(runner: runner),
+            CPUScanner(runner: runner),
+            StorageScanner(runner: runner),
+            DevArtifactScanner(runner: runner, options: options),
+            AlternativesScanner(runner: runner)
+        ]
         self.runner = runner
     }
 

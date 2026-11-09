@@ -56,6 +56,8 @@ All common tasks go through one script:
 
 Run `./scripts/optimizr help` for options. The focused helpers in `scripts/` can also be called directly.
 
+Developer cleanup is included in every scan: `node_modules`, rebuildable project output across common toolchains (including Bun, pnpm, Yarn, Python, Rust, Java, Swift, Flutter, and more), and global package-manager caches. Evidence is grouped by project by default; pass `--deep-dev` to `./scripts/optimizr scan` (or enable **Show nested dev folders** in the sidebar) to expand nested projects.
+
 ### Iterate on the UI without a bundle
 
 ```bash

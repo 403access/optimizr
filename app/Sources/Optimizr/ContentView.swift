@@ -74,6 +74,9 @@ private struct SidebarView: View {
                 }
             }
 
+            developerOptions
+                .padding(.top, 12)
+
             Spacer(minLength: 20)
 
             privacyNote
@@ -169,6 +172,28 @@ private struct SidebarView: View {
             .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
+    }
+
+    private var developerOptions: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Toggle(isOn: $model.includeNestedDeveloperArtifacts) {
+                Text("Show nested dev folders")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .toggleStyle(.switch)
+            .controlSize(.mini)
+            .help("Include node_modules and build folders inside monorepo packages. Off keeps one row per project.")
+
+            Text("node_modules and developer caches are always analyzed. Turn this on for per-package detail.")
+                .font(.system(size: 8.5))
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(9)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.03))
+        )
     }
 
     private var privacyNote: some View {

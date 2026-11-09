@@ -41,11 +41,12 @@ Make Mac performance **legible, actionable, and safe**. A user should be able to
 
 The current release is a **read-only auditor** with broad coverage and an opinionated report:
 
-- 23 built-in checks plus contextual app-alternative findings across three categories.
+- 26 built-in checks plus contextual app-alternative findings across three categories.
+- Developer cleanup coverage for node_modules, rebuildable project artifacts across 15+ toolchains, and global package-manager caches (including Bun).
 - Stable IDs, severity thresholds, evidence, references, and remediation steps.
 - Category and free-text filtering; detail pane with Reveal in Finder and copyable commands.
 - Markdown export from the app; JSON and Markdown from the CLI.
-- 32 unit tests.
+- 43 unit tests.
 - One Pages artifact containing docs and marketing, deployed by GitHub Actions.
 
 ## Next (v0.2)
@@ -53,7 +54,7 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 - [ ] **Scan history.** Persist reports locally (SQLite or JSON) and show deltas: swap over time, storage trend, recurring findings.
 - [ ] **Menu-bar companion.** A small status item with score and a one-click rescan, without a Dock-only workflow.
 - [ ] **Scheduled scans.** Opt-in weekly audit with a local notification; no background network.
-- [ ] **More storage targets.** npm/pnpm/yarn caches, browser profile caches, Mail downloads, Logic/GarageBand libraries, Steam, old iOS runtimes.
+- [ ] **More storage targets.** Browser profile caches, Mail downloads, Logic/GarageBand libraries, Steam, and old iOS runtimes. Developer and package-manager caches shipped in v0.1.1.
 - [ ] **Better process attribution.** Map launch items to running processes and responsible apps where possible.
 - [ ] **Snapshot sizing.** Investigate APFS snapshot size reporting without shelling out to unsupported tools.
 - [ ] **Notarization and a signed DMG.** Developer ID, hardened runtime, notarytool, and a release DMG.
@@ -93,6 +94,7 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 | 2026-11-08 | Docs | Optimization guide with what/why/how and native vs third-party scope | — |
 | 2026-11-08 | App | Finding scope in the UI, CLI, and export; protected-apps finding | — |
 | 2026-11-08 | App | App/service alternatives with estimated resource gains | — |
+| 2026-11-09 | App | Developer cleanup: node_modules, build artifacts, package caches, nested toggle | — |
 
 ### #foundation — Project foundation
 
@@ -259,6 +261,24 @@ The current release is a **read-only auditor** with broad coverage and an opinio
 **Validation:** `swift build` and `swift test` (32 passing); a live scan on a running Chrome instance emitted `memory.alternative.safari-instead-of-chromium.com-google-chrome` with a 0.7–1.3 GB estimated memory gain and a 5–11% CPU gain.
 
 **Docs:** [App & service alternatives](product/alternatives), [Findings catalog](product/findings-catalog#app-and-service-alternatives), [Optimization guide](product/optimizations#app-and-service-alternatives), [Scanner engine](tech/scanner-engine#app-and-service-alternatives).
+
+### #developer-cleanup — Developer artifact and cache cleanup
+
+**Why:** Developer machines accumulate the largest rebuildable storage in plain sight: `node_modules` trees, Rust/Maven/Gradle targets, Python virtualenvs, nested build caches, and global package-manager download caches. General cache findings do not explain these, and a per-folder finding list would be noise. Developers also use different toolchains — npm, pnpm, Yarn, Bun, pip, uv, Cargo, Go, Gradle, Maven, CocoaPods, SwiftPM, Flutter, and more — so the feature has to be data-driven.
+
+**What:**
+
+- Three aggregate storage findings: `storage.dev-node-modules`, `storage.dev-build-artifacts`, and `storage.dev-package-caches`.
+- Discovery scans a fixed set of common developer roots with `find`, prunes artifact folders so nested `node_modules` is never double counted, and validates ambiguous names (`target`, `build`, `vendor`) against project markers.
+- Evidence is grouped by nearest repository root by default. **Show nested dev folders** in the sidebar (or `optimizr-scan --deep-dev`) expands to individual nested projects and raises the discovery depth.
+- Build artifacts cover JavaScript frameworks, Python, Rust, Java/sbt, .NET, SwiftPM, Flutter/Dart, Expo, CocoaPods, Go, Composer, Elixir, Zig, and Haskell.
+- Package caches cover npm, Bun, pnpm, Yarn, pip, uv, Cargo, Go, Gradle, Maven, CocoaPods, SwiftPM, JetBrains, Composer, Conda, Terraform, Dart/Flutter, NuGet, Playwright, Cypress, Puppeteer, Electron, Deno, Hugging Face, PyTorch, and sbt/Ivy, aggregated by manager with de-duplicated cleanup commands.
+- Developer caches under `~/Library/Caches` are subtracted from `storage.app-caches` only when the developer finding is above its reporting threshold, and large-file search excludes developer artifact folders. Report totals stay consistent.
+- Measurement is batched (four storage targets, six artifact folders) and bounded by timeouts; discovery is capped at 500 folders.
+
+**Validation:** `swift build`; `swift test` (43 passing, including artifact classification, repository grouping, nested summarization, and cache aggregation); a live scan on a developer Mac reported the developer cache aggregate, listed npm/Bun/pnpm/Yarn/Gradle/CocoaPods/SwiftPM caches, and the high-level node_modules finding.
+
+**Docs:** [Findings catalog](product/findings-catalog#developer-storage), [Optimization guide](product/optimizations#storagedev-node-modules--installed-javascript-dependencies), [Scanner engine](tech/scanner-engine#developer-artifacts), [Data model](tech/data-model#stable-ids).
 
 ## Decision log
 

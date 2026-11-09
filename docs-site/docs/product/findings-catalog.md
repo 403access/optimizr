@@ -26,7 +26,7 @@ Findings are classified by **where the condition lives**, not by who performs th
 | Scope | Definition | Findings |
 | --- | --- | --- |
 | **Native** | A macOS/Apple-owned subsystem, setting, tool, or data store creates or manages the condition | `memory.pressure`, `memory.swap`, `memory.compressor`, `cpu.load`, `cpu.thermal`, `cpu.low-power-mode`, `cpu.uptime`, `storage.disk-space`, `storage.xcode-*`, `storage.simulators`, `storage.ios-backups`, `storage.trash`, `storage.protected-apps`, `storage.local-snapshots` |
-| **Third-party** | The condition or artifact belongs to non-Apple software | `cpu.launch-items`, `storage.homebrew`, `storage.docker` |
+| **Third-party** | The condition or artifact belongs to non-Apple software | `cpu.launch-items`, `storage.homebrew`, `storage.docker`, `storage.dev-node-modules`, `storage.dev-build-artifacts`, `storage.dev-package-caches` |
 | **Mixed** | The condition depends on which app you run, or a native location holds third-party data | `memory.top-process`, `cpu.top-process`, `storage.app-caches` |
 | **User data** | The condition is your own files rather than a vendor's software | `storage.large-files` |
 
@@ -197,7 +197,7 @@ Disk usage is read from `attributesOfFileSystem` for `/`. Directory sizes use `d
 
 | ID | Location | Reports at | High | Critical | Fix |
 | --- | --- | --- | --- | --- | --- |
-| `storage.app-caches` | `~/Library/Caches` minus Homebrew | 1 GB | 5 GB | 15 GB | Review, quit apps, remove app cache folders |
+| `storage.app-caches` | `~/Library/Caches` minus Homebrew and reported developer caches | 1 GB | 5 GB | 15 GB | Review, quit apps, remove app cache folders |
 | `storage.homebrew` | `~/Library/Caches/Homebrew` | 500 MB | 2 GB | 5 GB | `brew cleanup --prune=all` |
 | `storage.xcode-derived-data` | `~/Library/Developer/Xcode/DerivedData` | 1 GB | 5 GB | 15 GB | Quit Xcode, remove build products; Xcode rebuilds |
 | `storage.xcode-device-support` | `~/Library/Developer/Xcode/iOS DeviceSupport` | 2 GB | 10 GB | 20 GB | Remove OS versions you no longer debug |
@@ -207,9 +207,23 @@ Disk usage is read from `attributesOfFileSystem` for `/`. Directory sizes use `d
 | `storage.trash` | `~/.Trash` | 200 MB | 2 GB | 10 GB | Review, then empty |
 | `storage.docker` | `~/Library/Containers/com.docker.docker` | 5 GB | 20 GB | 50 GB | `docker system prune -a --volumes` |
 
-Severity for directory findings is **medium** at the report threshold, **high** at the high threshold, and **critical** at the critical threshold. The Homebrew size is subtracted from the general cache estimate so the two findings do not double count.
+Severity for directory findings is **medium** at the report threshold, **high** at the high threshold, and **critical** at the critical threshold. The Homebrew size and any reported developer cache that lives under `~/Library/Caches` are subtracted from the general cache estimate so findings do not double count. Caches below their own reporting threshold are left inside the app-cache total, so space never disappears from the report.
 
 **Safety notes shown in the app:** caches are disposable but rebuilding them makes the next launch slower; Xcode rebuilds DerivedData automatically; archives and backups may be needed for symbolication or restore; Docker pruning can remove volumes.
+
+### Developer storage
+
+Developer artifacts are reported as three high-level findings. By default each finding has **one evidence row per repository root**, not one row per nested package. Enable **Show nested dev folders** in the sidebar (or pass `--deep-dev` to the CLI) to list individual nested projects. Discovery prunes matched artifact folders, so a `node_modules` inside another `node_modules` is never counted twice.
+
+| ID | Location | Reports at | High | Critical | Fix |
+| --- | --- | --- | --- | --- | --- |
+| `storage.dev-node-modules` | `node_modules` under `~/Developer`, `~/Projects`, `~/Code`, `~/src`, `~/repos`, `~/workspace`, `~/Documents/GitHub`, `~/Documents/Projects`, and `~/Desktop` | 500 MB | 3 GB | 10 GB | Remove and reinstall with npm, pnpm, Yarn, or Bun |
+| `storage.dev-build-artifacts` | Rebuildable output such as `.venv`, Rust/Maven/sbt `target`, Gradle/Flutter `build`, .NET `bin`/`obj`, `Pods`, `.next`, `.nuxt`, `.svelte-kit`, `.turbo`, `.parcel-cache`, `.build`, `.dart_tool`, `.expo`, `vendor`, `_build`, `deps`, `.zig-cache`, `zig-out`, and `.stack-work` | 500 MB | 3 GB | 10 GB | Rebuild with the project's normal toolchain |
+| `storage.dev-package-caches` | npm, Bun, pnpm, Yarn, pip, uv, Cargo, Go, Gradle, Maven, CocoaPods, SwiftPM, JetBrains, Composer, Conda, Terraform, Dart/Flutter, NuGet, Playwright, Cypress, Puppeteer, Electron, Deno, Hugging Face, PyTorch, and sbt/Ivy caches | 500 MB | 3 GB | 10 GB | Run each vendor's cache-clean command |
+
+Findings are `thirdParty`, carry reclaimable bytes, and count toward the storage score and total. Developer caches that overlap `~/Library/Caches` are subtracted from `storage.app-caches`, so the report total is not inflated.
+
+**Safety notes shown in the app:** deleting `node_modules` or build output is reversible by reinstalling or rebuilding, but it needs network access and time. Keep source files and lockfiles. Maven, Gradle, Cargo, and Go caches are valuable offline. The bulk-removal commands are destructive and are always preceded by a preview command.
 
 ### `storage.large-files`
 

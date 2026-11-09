@@ -11,11 +11,11 @@ sidebar_position: 5
 ./scripts/optimizr test
 ```
 
-The current suite has **32 tests** in three groups. They run in about a second because they exercise pure functions; they do not need special permissions, network access, or a particular machine state.
+The current suite has **43 tests** in four groups. They run in about a second because they exercise pure functions and a fake command runner; they do not need special permissions, network access, or a particular machine state.
 
 ## What is covered
 
-### Parsers (15 tests)
+### Parsers (17 tests)
 
 | Test | Protects |
 | --- | --- |
@@ -33,7 +33,29 @@ The current suite has **32 tests** in three groups. They run in about a second b
 | `testHealthyThermalState` | No false positive at 100% |
 | `testParsesLowPowerMode` | `pmset` flag |
 | `testParsesDuOutput` | Kilobyte-to-byte conversion |
+| `testParsesMultiPathDuOutput` | Map output for measured directory lists |
 | `testParsesLargeFiles` | `size|path` format and home abbreviation |
+| `testClassifiesProtectedAppBundles` | System and `restricted` bundle classification |
+
+### Alternatives (7 tests)
+
+Alternative evaluation, bundle grouping, memory/CPU category choice, and duplicate suppression. See `AlternativeTests`.
+
+### Developer storage (11 tests)
+
+| Test | Protects |
+| --- | --- |
+| `testClassifiesArtifactBasenames` | Basename-to-kind mapping for every supported toolchain |
+| `testValidatesAmbiguousArtifactFolders` | `target`, `venv`, and framework folders need project markers |
+| `testValidatesEcosystemSpecificArtifactFolders` | Flutter, Gradle, Go vendor, and SwiftPM markers |
+| `testFindArgumentsPruneMetadataAndArtifacts` | Discovery depth, pruning, and artifact names |
+| `testResolvesHighLevelProjectRoots` | Repository-root grouping and nested detection |
+| `testParsesFindOutputAndSkipsInvalidMatches` | Find output filtering and project attribution |
+| `testSummaryGroupsNestedArtifactsByDefault` | High-level rows vs opt-in nested rows |
+| `testScannerUsesEveryRelevantRootInCleanupCommands` | Bulk commands cover every root with a finding |
+| `testPackageCacheFindingGroupsManagers` | Manager aggregation and de-duplicated commands |
+| `testPackageCacheFindingSkipsSmallTotals` | Report threshold |
+| `testPackageCacheCatalogHasUniqueEntries` | Stable cache IDs and commands |
 
 ### Model and scoring (8 tests)
 
@@ -105,6 +127,7 @@ Before a release:
 - [ ] Launch the app on a clean profile; the first scan completes without a beachball.
 - [ ] Overview shows host, OS, score, vitals, category cards, and top opportunities.
 - [ ] Each category lists findings; filtering by text and severity works.
+- [ ] The developer findings appear on a developer Mac, and **Show nested dev folders** expands the evidence after a rescan.
 - [ ] Selecting a finding updates the detail pane.
 - [ ] Copy command puts the exact command on the clipboard.
 - [ ] Reveal in Finder opens the containing folder.

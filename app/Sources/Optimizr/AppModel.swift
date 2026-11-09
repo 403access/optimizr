@@ -21,8 +21,20 @@ final class AppModel: ObservableObject {
     @Published var searchText = ""
     @Published var scanPhase = ""
     @Published var lastError: String?
+    @Published var includeNestedDeveloperArtifacts: Bool {
+        didSet {
+            UserDefaults.standard.set(includeNestedDeveloperArtifacts, forKey: Self.nestedDeveloperKey)
+            if hasScanned && !isScanning {
+                scan()
+            }
+        }
+    }
 
-    private let engine = ScanEngine()
+    private static let nestedDeveloperKey = "includeNestedDeveloperArtifacts"
+
+    init() {
+        includeNestedDeveloperArtifacts = UserDefaults.standard.bool(forKey: Self.nestedDeveloperKey)
+    }
 
     var lastScanDate: Date? {
         hasScanned ? report.finishedAt : nil
@@ -102,11 +114,12 @@ final class AppModel: ObservableObject {
         guard !isScanning else { return }
         isScanning = true
         lastError = nil
-        scanPhase = "Reading memory pressure"
+        scanPhase = "Auditing memory, CPU, storage, and developer artifacts"
+        let options = ScanOptions(includeNestedDeveloperArtifacts: includeNestedDeveloperArtifacts)
 
         Task { [weak self] in
             guard let self else { return }
-            let fresh = await self.engine.scan()
+            let fresh = await ScanEngine(options: options).scan()
             self.report = fresh
             self.hasScanned = true
             self.isScanning = false

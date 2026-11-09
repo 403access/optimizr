@@ -7,11 +7,15 @@ import OptimizrCore
 ///   optimizr-scan             Human-readable summary
 ///   optimizr-scan --json      Full report as JSON
 ///   optimizr-scan --markdown  Report as Markdown
+///   optimizr-scan --deep-dev  List nested developer project artifacts
 @main
 struct OptimizrScanCommand {
     static func main() async {
         let arguments = Set(CommandLine.arguments.dropFirst())
-        let report = await ScanEngine().scan()
+        let options = ScanOptions(
+            includeNestedDeveloperArtifacts: arguments.contains("--deep-dev")
+        )
+        let report = await ScanEngine(options: options).scan()
 
         if arguments.contains("--json") {
             printJSON(report)

@@ -24,9 +24,10 @@ sidebar_position: 1
 ┌──────────────────────────────▼──────────────────────────────┐
 │  OptimizrCore (library)                                     │
 │                                                             │
-│  ScanEngine ──► MemoryScanner ─┐                            │
-│             ├─► CPUScanner     ├─► ShellCommandRunner        │
-│             └─► StorageScanner ┘        │                    │
+│  ScanEngine ──► MemoryScanner ─────┐                        │
+│             ├─► CPUScanner         ├─► ShellCommandRunner    │
+│             ├─► StorageScanner     ┘        │                │
+│             └─► DevArtifactScanner ─────────┘                │
 │                                         ▼                    │
 │  SystemProfiler ──► SystemSnapshot    macOS utilities        │
 │  Parsers: vm_stat, ps, sysctl, du, find, pmset, tmutil       │
@@ -50,6 +51,7 @@ app/
     CommandRunner.swift    process execution, timeouts, paths
     SystemParsers.swift    vm_stat, swap, pressure, ps, load, therm, power
     SystemProfiler.swift   snapshot assembly, launch items, du/find parsers
+    DeveloperStorage.swift ScanOptions, developer artifact discovery/grouping, cache catalog
     Scanners.swift         memory/CPU/storage scanners + ScanEngine
   Sources/Optimizr/
     OptimizrApp.swift      @main, window, menu commands

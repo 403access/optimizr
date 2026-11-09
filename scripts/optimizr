@@ -15,7 +15,7 @@ Commands:
   run          Build and launch the local dist app
   build        Build dist/Optimizr.app
   test         Run the Swift test suite
-  scan         Run the headless scanner (pass --json or --markdown)
+  scan         Run the headless scanner (pass --json, --markdown, or --deep-dev)
   docs         Start the Docusaurus development server
   site         Build and preview docs + marketing together
   icon         Regenerate the app icon
@@ -27,6 +27,7 @@ Examples:
   ./scripts/optimizr install --no-launch
   ./scripts/optimizr run
   ./scripts/optimizr scan --markdown
+  ./scripts/optimizr scan --deep-dev
   ./scripts/optimizr docs
   ./scripts/optimizr site
 EOF

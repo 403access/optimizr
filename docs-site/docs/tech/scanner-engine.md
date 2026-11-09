@@ -21,10 +21,9 @@ Each scanner returns findings only. Every finding carries a `FindingScope` (nati
 ```swift
 public struct ScanEngine: Sendable {
     public init(
-        scanners: [any OptimizrScanner] = [
-            MemoryScanner(), CPUScanner(), StorageScanner()
-        ],
-        runner: any CommandRunning = ShellCommandRunner()
+        scanners: [any OptimizrScanner]? = nil,
+        runner: any CommandRunning = ShellCommandRunner(),
+        options: ScanOptions = .standard
     )
 
     public func scan() async -> ScanReport
@@ -39,7 +38,7 @@ public struct ScanEngine: Sendable {
 4. Sorts by severity (descending), then by reclaimable bytes (descending).
 5. Returns a `ScanReport` with start/finish timestamps.
 
-The CLI and the app both call this method, so there is no second implementation to drift.
+The default scanners are `MemoryScanner`, `CPUScanner`, `StorageScanner`, `DevArtifactScanner`, and `AlternativesScanner`. `ScanOptions.includeNestedDeveloperArtifacts` controls how developer evidence is expanded; the app exposes it as “Show nested dev folders” and the CLI as `--deep-dev`. The CLI and the app both call this method, so there is no second implementation to drift.
 
 ## Command runner
 
@@ -147,8 +146,11 @@ Targets are measured concurrently with `du -sk <path>`, timeout 12 seconds each.
 - `~/Library/Application Support/MobileSync/Backup`
 - `~/.Trash`
 - `~/Library/Containers/com.docker.docker`
+- Global developer caches from `DevCacheCatalog`: npm, Bun, pnpm, Yarn, pip, uv, Cargo, Go, Gradle, Maven, CocoaPods, SwiftPM, JetBrains, Composer, Conda, Terraform, Dart/Flutter, NuGet, Playwright, Cypress, Puppeteer, Electron, Deno, Hugging Face, PyTorch, and sbt/Ivy
 
-The measurement code uses `DispatchQueue.concurrentPerform` and guards the result dictionary with `NSLock`. Targets that do not exist are skipped before any process is launched.
+The measurement code processes small batches with `DispatchQueue.concurrentPerform` and guards the result dictionary with `NSLock`. Running every target at once thrashes the disk on machines with multi-gigabyte caches, so the batch size is capped at four. Fixed targets get a 12-second timeout; developer caches get 90 seconds because their file counts can be very high. Targets that do not exist are skipped before any process is launched.
+
+Developer caches that live under `~/Library/Caches` are subtracted from `storage.app-caches`, but only when their own aggregate finding is above its reporting threshold. A cache below the threshold stays inside the app-cache total, so space never disappears from the report.
 
 ### Large files
 
@@ -156,10 +158,30 @@ The measurement code uses `DispatchQueue.concurrentPerform` and guards the resul
 /usr/bin/find <Downloads> <Desktop> <Documents> <Movies> \
   -type f -size +1G \
   -not -path "*/.git/*" -not -path "*/Library/*" \
+  -not -path "*/node_modules/*" -not -path "*/.venv/*" -not -path "*/Pods/*" \
+  -not -path "*/build/*" -not -path "*/target/*" -not -path "*/vendor/*" \
   -exec /usr/bin/stat -f "%z|%N" {} +
 ```
 
-Output is parsed as `size|path` and sorted. The finding reports the total, the count, and up to eight files. The scan is bounded by a 12-second timeout. A file named with a newline is an accepted edge case; the parser skips malformed lines.
+Output is parsed as `size|path` and sorted. The finding reports the total, the count, and up to eight files. The scan is bounded by a 12-second timeout. A file named with a newline is an accepted edge case; the parser skips malformed lines. Developer artifact folders are excluded so a large dependency file is not counted both as a large file and as developer storage.
+
+### Developer artifacts
+
+`DevArtifactScanner` discovers rebuildable project folders under a fixed set of common developer roots (`~/Developer`, `~/Projects`, `~/Code`, `~/src`, `~/repos`, `~/workspace`, `~/Documents/GitHub`, `~/Documents/Projects`, and `~/Desktop`). It never walks the whole home directory.
+
+```text
+/usr/bin/find <roots> -maxdepth 5 \
+  \( -name .git -o -name .hg -o -name .svn \) -prune -o \
+  \( -type d \( <artifact names> \) -prune -print \)
+```
+
+- `-prune` on both metadata and artifact folders prevents a `node_modules` inside another `node_modules` from being counted twice.
+- The default depth is 5; the opt-in deep mode raises it to 8 and expands evidence to nested project rows.
+- Ambiguous names (`target`, `build`, `vendor`) are validated against project markers before they are accepted.
+- Discovery is capped at 500 folders. Measurement is batched with `DispatchQueue.concurrentPerform` (six at a time) and a 20-second `du -sk` timeout per folder, so one giant tree cannot block the rest.
+- Evidence is grouped by the nearest repository root (`.git`/`.hg`) or the artifact's parent when the project is not a repository.
+
+`DevCacheFindingBuilder` aggregates global package-manager caches by manager. It emits one finding instead of one per cache, and the cleanup steps de-duplicate identical commands (for example, pnpm store paths share `pnpm store prune`).
 
 ### App and service alternatives
 
@@ -207,12 +229,14 @@ All parsers are pure static functions, which is why the test suite can run witho
 | `DuParser` | single-path `du -sk` | Bytes |
 | `DuListingParser` | multi-path `du -sk` | Path-to-bytes map |
 | `LargeFileParser` | `find`/`stat` output | Path and bytes |
+| `DevArtifactInventory.parse` | `find` output plus file-system markers | Validated artifact paths, kinds, and repository roots |
+| `DevArtifactInventory.summarize` | Measured artifacts | Total, project rows, nested count |
 
 Parsers return `nil` or an empty array when the output is not recognizable. They do not throw and do not assert.
 
 ## Adding a finding
 
-1. Choose a stable ID: `<category>.<slug>` (for example `storage.npm-cache`).
+1. Choose a stable ID: `<category>.<slug>` (for example `storage.mail-downloads`).
 2. Add a scanner block that gathers evidence. Reuse `runner.run`; do not spawn a shell.
 3. Set severity from a documented threshold. Prefer a small helper over nesting ternaries.
 4. Provide at least one remediation step. Use `.command` only when the command is genuinely useful and safe to present; include a warning in `detail` for anything destructive.
@@ -232,11 +256,14 @@ Parsers return `nil` or an empty array when the output is not recognizable. They
 ## Performance budget
 
 - Target: full scan under ~15 seconds on an SSD for a typical home directory.
-- Each command is capped: most at 3–8 seconds, storage commands at 12 seconds.
+- Each command is capped: most at 3–8 seconds, fixed storage targets at 12 seconds, developer caches at 90 seconds, and developer artifact folders at 20 seconds.
 - Scanners run in parallel; one slow storage folder does not serialize memory and CPU analysis.
+- Storage targets are measured in batches of four, and developer artifacts in batches of six, to avoid disk thrashing.
 - The UI remains responsive throughout; a blocking scan is a bug.
 
-If a target becomes slow (for example, a giant `~/Downloads`), prefer narrowing the search or lowering the timeout over removing the finding.
+Developer caches can contain hundreds of thousands of files (Bun and npm caches are common examples), so a developer-heavy Mac can take longer than the 15-second target on the first scan. The work is bounded by per-cache timeouts and a 500-folder artifact cap. If a target becomes slow (for example, a giant `~/Downloads`), prefer narrowing the search or lowering the timeout over removing the finding.
+
+The app's **Show nested dev folders** toggle and the CLI's `--deep-dev` flag change only evidence detail and discovery depth. They do not change which cache paths are measured.
 
 ## Safety review checklist for a new scanner
 

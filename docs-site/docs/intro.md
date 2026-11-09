@@ -24,9 +24,9 @@ Optimizr is a native macOS utility that audits your Mac across memory, CPU, and 
 | Area | State |
 | --- | --- |
 | macOS app | Working MVP — SwiftUI, macOS 14+, Apple silicon tested |
-| Scanner coverage | 23 built-in checks plus contextual app-alternative findings |
+| Scanner coverage | 26 built-in checks plus contextual app-alternative findings, including developer artifacts and package caches |
 | Automation | Read-only scans; no destructive actions |
-| Tests | 32 unit tests covering parsers, alternatives, scoring, and report export |
+| Tests | 43 unit tests covering parsers, developer artifact grouping, alternatives, scoring, and report export |
 | Documentation | This Docusaurus site |
 | Marketing site | Static site deployed alongside these docs |
 | Deployment | GitHub Pages via GitHub Actions |
