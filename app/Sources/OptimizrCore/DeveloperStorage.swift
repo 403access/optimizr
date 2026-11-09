@@ -778,7 +778,10 @@ public struct DevArtifactScanner: OptimizrScanner {
             let nameExpression = names
                 .map { "-name \($0)" }
                 .joined(separator: " -o ")
-            let expression = "( \(nameExpression) ) -type d -prune"
+            // Escape the grouping parentheses: the command is copied into an
+            // interactive shell, and zsh treats a bare `(` as a glob qualifier
+            // ("unknown file attribute").
+            let expression = "\\( \(nameExpression) \\) -type d -prune"
 
             steps.append(RemediationStep(
                 title: "Preview a bulk cleanup",

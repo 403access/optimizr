@@ -255,6 +255,55 @@ final class DeveloperStorageTests: XCTestCase {
         XCTAssertFalse(finding.remediation.contains { $0.command?.contains("'~/") == true })
     }
 
+    func testBulkCleanupCommandsRunInZsh() throws {
+        let home = try makeTemporaryHome()
+        let developer = home.appendingPathComponent("Developer", isDirectory: true)
+        let desktop = home.appendingPathComponent("Desktop", isDirectory: true)
+        let folders = [
+            developer.appendingPathComponent("repo/node_modules", isDirectory: true),
+            desktop.appendingPathComponent("app/node_modules", isDirectory: true)
+        ]
+        for folder in folders {
+            try createDirectory(folder)
+        }
+
+        let size: Int64 = 300 * 1_024 * 1_024
+        let runner = FakeDevRunner(
+            findOutput: folders.map(\.path).joined(separator: "\n") + "\n",
+            sizes: Dictionary(uniqueKeysWithValues: folders.map { ($0.path, size) })
+        )
+        let findings = DevArtifactScanner(runner: runner, home: home).scan()
+        let finding = try XCTUnwrap(findings.first { $0.id == "storage.dev-node-modules" })
+        let commands = finding.remediation.compactMap(\.command)
+
+        XCTAssertTrue(commands.contains { $0.contains("\\( -name") }, commands.joined(separator: " ||| "))
+
+        let preview = try XCTUnwrap(finding.remediation.first { $0.title == "Preview a bulk cleanup" }?.command)
+        let result = runInZsh(preview)
+        XCTAssertEqual(result.status, 0, "zsh rejected the command: \(result.stderr)")
+        XCTAssertEqual(
+            Set(result.stdout.split(separator: "\n").map(String.init)),
+            Set(folders.map(\.path))
+        )
+    }
+
+    private func runInZsh(_ command: String) -> (status: Int32, stdout: String, stderr: String) {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        process.arguments = ["-c", command]
+        let stdout = Pipe()
+        let stderr = Pipe()
+        process.standardOutput = stdout
+        process.standardError = stderr
+        try? process.run()
+        process.waitUntilExit()
+        return (
+            process.terminationStatus,
+            String(decoding: stdout.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self),
+            String(decoding: stderr.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+        )
+    }
+
     // MARK: Package caches
 
     func testPackageCacheFindingGroupsManagers() {
